@@ -24,9 +24,7 @@ def main():
     build_yaml_path = "JellyTrack.Plugin/build.yaml"
     zip_path = "JellyTrack.Plugin.zip"
     
-    # Create public directory for gh-pages deployment
-    os.makedirs("public", exist_ok=True)
-    manifest_path = "public/manifest.json"
+    manifest_path = "manifest.json"
 
     with open(build_yaml_path, "r", encoding="utf-8") as f:
         build_info = yaml.safe_load(f)
@@ -48,20 +46,15 @@ def main():
 
     manifest = []
     
-    # Try to fetch existing manifest from GitHub Pages
-    owner, repository = repo.split('/')
-    manifest_url = f"https://{owner}.github.io/{repository}/manifest.json"
-    print(f"Attempting to download existing manifest from {manifest_url}...")
-    
+    # Try to load existing manifest from the local file
+    print(f"Attempting to load existing manifest from {manifest_path}...")
     try:
-        req = urllib.request.Request(manifest_url)
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                data = response.read()
-                manifest = json.loads(data)
-                print("Successfully loaded existing manifest.")
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            print("Successfully loaded existing manifest.")
     except Exception as e:
-        print(f"Could not load existing manifest (it might not exist yet): {e}")
+        print(f"Could not load existing manifest: {e}")
 
     if isinstance(manifest, dict):
         manifest = [manifest]
