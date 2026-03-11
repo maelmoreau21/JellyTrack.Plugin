@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore JellyTrack.Plugin/JellyTrack.Plugin.csproj
+
+    - name: Build and Publish
+      run: dotnet publish JellyTrack.Plugin/JellyTrack.Plugin.csproj -c Release -o ./publish
+
+    - name: Create Zip Archive
+      run: |
+        cd ./publish
+        zip -r ../JellyTrack.Plugin.zip ./*
+        cd ..
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: JellyTrack.Plugin.zip
+        generate_release_notes: true
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install Python Dependencies
+      run: pip install pyyaml
+
+    - name: Update manifest.json
+      run: python scripts/update_manifest.py
+      env:
+        RELEASE_TAG: ${{ github.ref_name }}
+        REPO: ${{ github.repository }}
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
+        commit_message: "Update manifest.json for release ${{ github.ref_name }}"

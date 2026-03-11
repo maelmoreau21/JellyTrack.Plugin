@@ -1,0 +1,107 @@
+import os
+import sys
+import yaml
+import json
+import hashlib
+import urllib.request
+import urllib.error
+
+def get_md5(file_path):
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def main():
+    repo = os.environ.get("REPO")
+    tag = os.environ.get("RELEASE_TAG")
+    
+    if not repo or not tag:
+        print("Missing REPO or RELEASE_TAG environment variables")
+        sys.exit(1)
+
+    build_yaml_path = "JellyTrack.Plugin/build.yaml"
+    zip_path = "JellyTrack.Plugin.zip"
+    
+    # Create public directory for gh-pages deployment
+    os.makedirs("public", exist_ok=True)
+    manifest_path = "public/manifest.json"
+
+    with open(build_yaml_path, "r", encoding="utf-8") as f:
+        build_info = yaml.safe_load(f)
+
+    checksum = get_md5(zip_path)
+    target_abi = build_info.get("targetAbi", "10.10.0.0")
+    
+    version_info = {
+        "version": tag.lstrip('v'),
+        "changelog": build_info.get("changelog", ""),
+        "targetAbi": target_abi,
+        "sourceUrl": f"https://github.com/{repo}/releases/download/{tag}/JellyTrack.Plugin.zip",
+        "checksum": checksum,
+        "timestamp": ""
+    }
+
+    import datetime
+    version_info["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    manifest = []
+    
+    # Try to fetch existing manifest from GitHub Pages
+    owner, repository = repo.split('/')
+    manifest_url = f"https://{owner}.github.io/{repository}/manifest.json"
+    print(f"Attempting to download existing manifest from {manifest_url}...")
+    
+    try:
+        req = urllib.request.Request(manifest_url)
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = response.read()
+                manifest = json.loads(data)
+                print("Successfully loaded existing manifest.")
+    except Exception as e:
+        print(f"Could not load existing manifest (it might not exist yet): {e}")
+
+    if isinstance(manifest, dict):
+        manifest = [manifest]
+
+    plugin_entry = None
+    for plugin in manifest:
+        if plugin.get("guid") == build_info.get("guid"):
+            plugin_entry = plugin
+            break
+
+    if not plugin_entry:
+        plugin_entry = {
+            "guid": build_info.get("guid"),
+            "name": build_info.get("name"),
+            "description": build_info.get("description"),
+            "overview": build_info.get("overview"),
+            "owner": build_info.get("owner"),
+            "category": build_info.get("category"),
+            "imageUrl": "",
+            "versions": []
+        }
+        manifest.append(plugin_entry)
+
+    versions = plugin_entry.get("versions", [])
+    version_exists = False
+    for i, v in enumerate(versions):
+        if v.get("version") == version_info["version"]:
+            versions[i] = version_info
+            version_exists = True
+            break
+    
+    if not version_exists:
+        versions.insert(0, version_info)
+    
+    plugin_entry["versions"] = versions
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=4, ensure_ascii=False)
+        
+    print(f"Manifest written to {manifest_path} with version {version_info['version']}")
+
+if __name__ == "__main__":
+    main()

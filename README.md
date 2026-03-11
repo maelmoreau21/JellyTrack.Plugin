@@ -22,9 +22,15 @@ Plugin Jellyfin qui envoie les événements de lecture et les métadonnées vers
 3. Copiez `JellyTrack.Plugin.dll` dans ce dossier
 4. Redémarrez Jellyfin
 
-### Méthode 2 : Depuis le catalogue de plugins
+### Méthode 2 : Ajouter le dépôt JellyTrack automatiquement
 
-*(À venir)*
+1. Dans Jellyfin, allez dans **Tableau de bord** > **Plugins** > **Dépôts**.
+2. Cliquez sur le bouton `+` pour ajouter un nouveau dépôt.
+3. Entrez les informations suivantes :
+   - **Nom** : JellyTrack
+   - **URL du dépôt** : `https://maelmoreau21.github.io/JellyTrack.Plugin/manifest.json`
+4. Allez dans le catalogue des plugins, cherchez "JellyTrack" et installez-le.
+5. Redémarrez Jellyfin.
 
 ## Configuration
 
