@@ -42,7 +42,7 @@ def main():
     }
 
     import datetime
-    version_info["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    version_info["timestamp"] = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     manifest = []
     
