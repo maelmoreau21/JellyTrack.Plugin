@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj": {}
+    "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj": {
+    "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
+        "projectUniqueName": "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
         "projectName": "JellyTrack.Plugin",
-        "projectPath": "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
+        "projectPath": "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
         "packagesPath": "C:\\Users\\Mael\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\obj\\",
+        "outputPath": "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Mael\\AppData\\Roaming\\NuGet\\NuGet.Config"

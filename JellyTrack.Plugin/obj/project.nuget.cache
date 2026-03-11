@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "6bWRMTAjaz8=",
+  "dgSpecHash": "hP2x5dt1JY0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mael\\Documents\\GitHub\\plugin-jellytrack\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
+  "projectFilePath": "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mael\\.nuget\\packages\\diacritics\\3.3.29\\diacritics.3.3.29.nupkg.sha512",
     "C:\\Users\\Mael\\.nuget\\packages\\icu4n\\60.1.0-alpha.356\\icu4n.60.1.0-alpha.356.nupkg.sha512",
