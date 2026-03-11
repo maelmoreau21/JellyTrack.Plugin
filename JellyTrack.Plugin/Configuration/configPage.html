@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>JellyTrack</title>
+</head>
+<body>
+    <div id="jellytrackConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="jellytrackConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">JellyTrack</h2>
+                    </div>
+
+                    <div class="verticalSection">
+                        <p>Configure la connexion vers votre serveur JellyTrack.</p>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="chkEnabled" type="checkbox" is="emby-checkbox" />
+                            <span>Activer le plugin</span>
+                        </label>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="txtJellyTrackUrl">URL de JellyTrack</label>
+                        <input id="txtJellyTrackUrl" type="url" is="emby-input"
+                               placeholder="http://192.168.1.100:3000/api/plugin/events" />
+                        <div class="fieldDescription">L'URL complète de l'endpoint JellyTrack (ex: http://192.168.1.100:3000/api/plugin/events)</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="txtApiKey">Clé API</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input id="txtApiKey" type="password" is="emby-input"
+                                   placeholder="jt_xxxxxxxxxxxx" style="flex: 1;" />
+                            <button id="btnToggleApiKey" type="button" is="emby-button" class="raised button-submit"
+                                    style="padding: 0.4em 0.8em; min-width: auto;">
+                                Afficher
+                            </button>
+                        </div>
+                        <div class="fieldDescription">La clé API générée dans les paramètres de JellyTrack (format: jt_xxxxxxxxxxxx)</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="txtHeartbeatInterval">Intervalle Heartbeat (secondes)</label>
+                        <input id="txtHeartbeatInterval" type="number" is="emby-input"
+                               min="10" max="3600" step="1" />
+                        <div class="fieldDescription">Intervalle entre chaque heartbeat envoyé à JellyTrack (défaut: 60 secondes)</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="txtProgressInterval">Intervalle PlaybackProgress (secondes)</label>
+                        <input id="txtProgressInterval" type="number" is="emby-input"
+                               min="5" max="300" step="1" />
+                        <div class="fieldDescription">Intervalle entre chaque mise à jour de progression de lecture (défaut: 15 secondes)</div>
+                    </div>
+
+                    <div style="margin-top: 1em;">
+                        <button id="btnTestConnection" type="button" is="emby-button" class="raised button-submit">
+                            <span>Tester la connexion</span>
+                        </button>
+                        <span id="testResult" style="margin-left: 1em; font-weight: bold;"></span>
+                    </div>
+
+                    <div style="margin-top: 2em;">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Enregistrer</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var JellyTrackConfig = {
+                pluginUniqueId: 'e5a2f2ed-7c2a-4a9f-b1d3-5e6f7a8b9c0d'
+            };
+
+            document.querySelector('#jellytrackConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#chkEnabled').checked = config.Enabled;
+                        document.querySelector('#txtJellyTrackUrl').value = config.JellyTrackUrl || '';
+                        document.querySelector('#txtApiKey').value = config.ApiKey || '';
+                        document.querySelector('#txtHeartbeatInterval').value = config.HeartbeatIntervalSeconds || 60;
+                        document.querySelector('#txtProgressInterval').value = config.ProgressIntervalSeconds || 15;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#btnToggleApiKey')
+                .addEventListener('click', function () {
+                    var input = document.querySelector('#txtApiKey');
+                    var btn = document.querySelector('#btnToggleApiKey');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        btn.textContent = 'Masquer';
+                    } else {
+                        input.type = 'password';
+                        btn.textContent = 'Afficher';
+                    }
+                });
+
+            document.querySelector('#btnTestConnection')
+                .addEventListener('click', function () {
+                    var resultEl = document.querySelector('#testResult');
+                    resultEl.textContent = 'Test en cours...';
+                    resultEl.style.color = '';
+
+                    var url = document.querySelector('#txtJellyTrackUrl').value.replace(/\/+$/, '');
+                    var apiKey = document.querySelector('#txtApiKey').value;
+
+                    if (!url || !apiKey) {
+                        resultEl.textContent = 'Veuillez remplir l\'URL et la clé API.';
+                        resultEl.style.color = 'red';
+                        return;
+                    }
+
+                    var payload = {
+                        event: 'Heartbeat',
+                        pluginVersion: 'test',
+                        serverName: 'Test',
+                        jellyfinVersion: 'test',
+                        users: []
+                    };
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify(payload)
+                    }).then(function (response) {
+                        if (response.ok) {
+                            resultEl.textContent = 'Connexion réussie !';
+                            resultEl.style.color = 'green';
+                        } else {
+                            resultEl.textContent = 'Erreur: HTTP ' + response.status;
+                            resultEl.style.color = 'red';
+                        }
+                    }).catch(function (err) {
+                        resultEl.textContent = 'Erreur: ' + err.message;
+                        resultEl.style.color = 'red';
+                    });
+                });
+
+            document.querySelector('#jellytrackConfigForm')
+                .addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
+                        config.Enabled = document.querySelector('#chkEnabled').checked;
+                        config.JellyTrackUrl = document.querySelector('#txtJellyTrackUrl').value;
+                        config.ApiKey = document.querySelector('#txtApiKey').value;
+                        config.HeartbeatIntervalSeconds = parseInt(document.querySelector('#txtHeartbeatInterval').value, 10) || 60;
+                        config.ProgressIntervalSeconds = parseInt(document.querySelector('#txtProgressInterval').value, 10) || 15;
+
+                        ApiClient.updatePluginConfiguration(JellyTrackConfig.pluginUniqueId, config).then(function () {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>
