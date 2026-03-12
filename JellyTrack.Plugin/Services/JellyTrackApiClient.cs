@@ -16,6 +16,7 @@ public class JellyTrackApiClient : IDisposable
     private readonly ILogger<JellyTrackApiClient> _logger;
     private readonly ConcurrentQueue<PluginEvent> _retryQueue = new();
     private const int MaxQueueSize = 100;
+    private const string PluginEventsPath = "/api/plugin/events";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -38,22 +39,25 @@ public class JellyTrackApiClient : IDisposable
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(config.JellyTrackUrl) || string.IsNullOrWhiteSpace(config.ApiKey))
+        var configuredUrl = config.JellyTrackUrl?.Trim() ?? string.Empty;
+        var apiKey = config.ApiKey?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(configuredUrl) || string.IsNullOrWhiteSpace(apiKey))
         {
             _logger.LogWarning("JellyTrack URL or API key is not configured");
             return false;
         }
 
-        if (!TryResolveEndpoint(config.JellyTrackUrl, out var endpoint))
+        if (!TryResolveEndpoint(configuredUrl, out var endpoint))
         {
-            _logger.LogWarning("Invalid JellyTrack URL configured: {Url}", config.JellyTrackUrl);
+            _logger.LogWarning("Invalid JellyTrack URL configured: {Url}", configuredUrl);
             return false;
         }
 
         // Attempt to flush queued events first
-        await FlushRetryQueueAsync(endpoint, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        await FlushRetryQueueAsync(endpoint, apiKey, cancellationToken).ConfigureAwait(false);
 
-        return await SendSingleEventAsync(endpoint, config.ApiKey, eventPayload, cancellationToken).ConfigureAwait(false);
+        return await SendSingleEventAsync(endpoint, apiKey, eventPayload, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TestConnectionResult> TestConnectionAsync(
@@ -62,19 +66,22 @@ public class JellyTrackApiClient : IDisposable
         PluginEvent eventPayload,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(apiKey))
+        var normalizedUrl = configuredUrl?.Trim() ?? string.Empty;
+        var normalizedApiKey = apiKey?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(normalizedApiKey))
         {
             return new TestConnectionResult(false, null, "API key is required.", string.Empty);
         }
 
-        if (!TryResolveEndpoint(configuredUrl, out var endpoint))
+        if (!TryResolveEndpoint(normalizedUrl, out var endpoint))
         {
-            return new TestConnectionResult(false, null, "Invalid JellyTrack URL.", configuredUrl);
+            return new TestConnectionResult(false, null, "Invalid JellyTrack URL.", normalizedUrl);
         }
 
         try
         {
-            using var request = BuildAuthenticatedRequest(endpoint, apiKey, eventPayload);
+            using var request = BuildAuthenticatedRequest(endpoint, normalizedApiKey, eventPayload);
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             var responseBody = await ReadResponseBodyAsync(response).ConfigureAwait(false);
 
@@ -188,9 +195,10 @@ public class JellyTrackApiClient : IDisposable
 
     private HttpRequestMessage BuildAuthenticatedRequest(Uri endpoint, string apiKey, PluginEvent eventPayload)
     {
+        var normalizedApiKey = apiKey.Trim();
         var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        request.Headers.TryAddWithoutValidation("X-Api-Key", apiKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", normalizedApiKey);
+        request.Headers.TryAddWithoutValidation("X-Api-Key", normalizedApiKey);
         request.Content = new StringContent(
             JsonSerializer.Serialize(eventPayload, eventPayload.GetType(), JsonOptions),
             Encoding.UTF8,
@@ -210,19 +218,34 @@ public class JellyTrackApiClient : IDisposable
         }
 
         var builder = new UriBuilder(parsed);
-        var path = builder.Path?.Trim() ?? string.Empty;
-
-        if (string.IsNullOrEmpty(path) || path == "/")
-        {
-            builder.Path = "/api/plugin/events";
-        }
-        else
-        {
-            builder.Path = "/" + path.Trim('/');
-        }
+        builder.Path = NormalizeEndpointPath(builder.Path);
 
         endpoint = builder.Uri;
         return true;
+    }
+
+    private static string NormalizeEndpointPath(string? originalPath)
+    {
+        var trimmed = (originalPath ?? string.Empty).Trim().Trim('/');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return PluginEventsPath;
+        }
+
+        var normalized = "/" + trimmed;
+        var lower = normalized.ToLowerInvariant();
+
+        if (lower.EndsWith("/api/plugin/events", StringComparison.Ordinal))
+        {
+            return normalized;
+        }
+
+        if (lower.EndsWith("/api/plugin", StringComparison.Ordinal))
+        {
+            return normalized + "/events";
+        }
+
+        return normalized + PluginEventsPath;
     }
 
     private static async Task<string> ReadResponseBodyAsync(HttpResponseMessage response)

@@ -113,8 +113,8 @@
                     resultEl.style.color = '';
                     button.setAttribute('disabled', 'disabled');
 
-                    var url = document.querySelector('#txtJellyTrackUrl').value.replace(/\/+$/, '');
-                    var apiKey = document.querySelector('#txtApiKey').value;
+                    var url = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
+                    var apiKey = document.querySelector('#txtApiKey').value.trim();
 
                     if (!url || !apiKey) {
                         resultEl.textContent = 'Veuillez remplir l\'URL et la clé API.';
@@ -168,9 +168,15 @@
                     Dashboard.showLoadingMsg();
 
                     ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
+                        var urlValue = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
+                        var apiKeyValue = document.querySelector('#txtApiKey').value.trim();
+
+                        document.querySelector('#txtJellyTrackUrl').value = urlValue;
+                        document.querySelector('#txtApiKey').value = apiKeyValue;
+
                         config.Enabled = document.querySelector('#chkEnabled').checked;
-                        config.JellyTrackUrl = document.querySelector('#txtJellyTrackUrl').value;
-                        config.ApiKey = document.querySelector('#txtApiKey').value;
+                        config.JellyTrackUrl = urlValue;
+                        config.ApiKey = apiKeyValue;
                         config.HeartbeatIntervalSeconds = parseInt(document.querySelector('#txtHeartbeatInterval').value, 10) || 60;
                         config.ProgressIntervalSeconds = parseInt(document.querySelector('#txtProgressInterval').value, 10) || 15;
 
