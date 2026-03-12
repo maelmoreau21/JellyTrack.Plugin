@@ -12,11 +12,11 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("JellyTrack.Plugin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a66c341cf8112b41d3da5709c1137cb628f6261")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.3.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.3.0+92adc6817320e0163177d751c002d6fe1306fc0d")]
 [assembly: System.Reflection.AssemblyProductAttribute("JellyTrack.Plugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JellyTrack.Plugin")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.3.0")]
 
 // Généré par la classe MSBuild WriteCodeFragment.
 

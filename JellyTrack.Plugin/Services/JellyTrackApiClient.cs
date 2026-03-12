@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -6,6 +7,8 @@ using JellyTrack.Plugin.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JellyTrack.Plugin.Services;
+
+public sealed record TestConnectionResult(bool Success, HttpStatusCode? StatusCode, string Message, string Endpoint);
 
 public class JellyTrackApiClient : IDisposable
 {
@@ -53,6 +56,58 @@ public class JellyTrackApiClient : IDisposable
         return await SendSingleEventAsync(endpoint, config.ApiKey, eventPayload, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<TestConnectionResult> TestConnectionAsync(
+        string configuredUrl,
+        string apiKey,
+        PluginEvent eventPayload,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return new TestConnectionResult(false, null, "API key is required.", string.Empty);
+        }
+
+        if (!TryResolveEndpoint(configuredUrl, out var endpoint))
+        {
+            return new TestConnectionResult(false, null, "Invalid JellyTrack URL.", configuredUrl);
+        }
+
+        try
+        {
+            using var request = BuildAuthenticatedRequest(endpoint, apiKey, eventPayload);
+            using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            var responseBody = await ReadResponseBodyAsync(response).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var message = string.IsNullOrWhiteSpace(responseBody)
+                    ? "Connection successful."
+                    : responseBody;
+                return new TestConnectionResult(true, response.StatusCode, message, endpoint.ToString());
+            }
+
+            _logger.LogWarning(
+                "JellyTrack test connection failed with {StatusCode}. Response: {Response}",
+                (int)response.StatusCode,
+                responseBody);
+
+            var failureMessage = string.IsNullOrWhiteSpace(responseBody)
+                ? $"HTTP {(int)response.StatusCode} {response.ReasonPhrase}"
+                : responseBody;
+
+            return new TestConnectionResult(false, response.StatusCode, failureMessage, endpoint.ToString());
+        }
+        catch (TaskCanceledException)
+        {
+            return new TestConnectionResult(false, null, "Request timed out while contacting JellyTrack.", endpoint.ToString());
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "JellyTrack test connection request failed");
+            return new TestConnectionResult(false, null, ex.Message, endpoint.ToString());
+        }
+    }
+
     private async Task<bool> SendSingleEventAsync(Uri endpoint, string apiKey, PluginEvent eventPayload, CancellationToken cancellationToken)
     {
         try
@@ -67,7 +122,12 @@ public class JellyTrackApiClient : IDisposable
                 return true;
             }
 
-            _logger.LogWarning("JellyTrack API returned {StatusCode} for event {Event}", response.StatusCode, eventPayload.Event);
+            var responseBody = await ReadResponseBodyAsync(response).ConfigureAwait(false);
+            _logger.LogWarning(
+                "JellyTrack API returned {StatusCode} for event {Event}. Response: {Response}",
+                response.StatusCode,
+                eventPayload.Event,
+                responseBody);
             EnqueueForRetry(eventPayload);
             return false;
         }
@@ -163,6 +223,18 @@ public class JellyTrackApiClient : IDisposable
 
         endpoint = builder.Uri;
         return true;
+    }
+
+    private static async Task<string> ReadResponseBodyAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     public void Dispose()

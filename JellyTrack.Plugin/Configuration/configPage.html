@@ -107,9 +107,11 @@
 
             document.querySelector('#btnTestConnection')
                 .addEventListener('click', function () {
+                    var button = document.querySelector('#btnTestConnection');
                     var resultEl = document.querySelector('#testResult');
                     resultEl.textContent = 'Test en cours...';
                     resultEl.style.color = '';
+                    button.setAttribute('disabled', 'disabled');
 
                     var url = document.querySelector('#txtJellyTrackUrl').value.replace(/\/+$/, '');
                     var apiKey = document.querySelector('#txtApiKey').value;
@@ -117,35 +119,46 @@
                     if (!url || !apiKey) {
                         resultEl.textContent = 'Veuillez remplir l\'URL et la clé API.';
                         resultEl.style.color = 'red';
+                        button.removeAttribute('disabled');
                         return;
                     }
 
-                    var payload = {
-                        event: 'Heartbeat',
-                        pluginVersion: 'test',
-                        serverName: 'Test',
-                        jellyfinVersion: 'test',
-                        users: []
-                    };
+                    var requestUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function')
+                        ? ApiClient.getUrl('JellyTrack/Test')
+                        : '/JellyTrack/Test';
 
-                    fetch(url, {
+                    fetch(requestUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + apiKey
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(payload)
-                    }).then(function (response) {
+                        body: JSON.stringify({
+                            url: url,
+                            apiKey: apiKey
+                        })
+                    }).then(async function (response) {
+                        var data = null;
+                        try {
+                            data = await response.json();
+                        } catch (err) {
+                            data = null;
+                        }
+
                         if (response.ok) {
-                            resultEl.textContent = 'Connexion réussie !';
+                            resultEl.textContent = data && data.endpoint
+                                ? 'Connexion réussie vers ' + data.endpoint
+                                : 'Connexion réussie !';
                             resultEl.style.color = 'green';
                         } else {
-                            resultEl.textContent = 'Erreur: HTTP ' + response.status;
+                            var message = data && data.message ? data.message : ('HTTP ' + response.status);
+                            resultEl.textContent = 'Erreur: ' + message;
                             resultEl.style.color = 'red';
                         }
                     }).catch(function (err) {
                         resultEl.textContent = 'Erreur: ' + err.message;
                         resultEl.style.color = 'red';
+                    }).finally(function () {
+                        button.removeAttribute('disabled');
                     });
                 });
 
@@ -162,7 +175,17 @@
                         config.ProgressIntervalSeconds = parseInt(document.querySelector('#txtProgressInterval').value, 10) || 15;
 
                         ApiClient.updatePluginConfiguration(JellyTrackConfig.pluginUniqueId, config).then(function () {
-                            Dashboard.processPluginConfigurationUpdateResult();
+                            var heartbeatUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function')
+                                ? ApiClient.getUrl('JellyTrack/HeartbeatNow')
+                                : '/JellyTrack/HeartbeatNow';
+
+                            return fetch(heartbeatUrl, {
+                                method: 'POST'
+                            }).catch(function () {
+                                return null;
+                            }).finally(function () {
+                                Dashboard.processPluginConfigurationUpdateResult();
+                            });
                         });
                     });
 
