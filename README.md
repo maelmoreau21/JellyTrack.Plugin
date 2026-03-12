@@ -36,7 +36,7 @@ Plugin Jellyfin qui envoie les événements de lecture et les métadonnées vers
 
 1. Dans l'admin Jellyfin, allez dans **Tableau de bord → Plugins → JellyTrack**
 2. Configurez :
-   - **URL de JellyTrack** : L'endpoint API de votre instance JellyTrack (ex: `http://192.168.1.100:3000/api/plugin/events`)
+   - **URL de JellyTrack** : L'URL cible exacte de votre endpoint (ex: `http://192.168.1.100:3000/api/plugin/events` ou `http://192.168.1.100:3000/api/webhook/jellyfin`). Si vous saisissez uniquement l'hôte (ex: `http://192.168.1.100:3000`), le plugin utilise `/api/plugin/events` par défaut.
    - **Clé API** : La clé générée dans JellyTrack (format: `jt_xxxxxxxxxxxx`)
    - **Intervalle Heartbeat** : Fréquence des heartbeats en secondes (défaut: 60)
    - **Intervalle Progress** : Fréquence des mises à jour de progression en secondes (défaut: 15)

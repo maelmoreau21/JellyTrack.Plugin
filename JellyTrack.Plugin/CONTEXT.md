@@ -20,7 +20,7 @@ Jellyfin Server
               ▼
         JellyTrackApiClient (HttpClient)
               │
-              ▼  POST /api/plugin/events
+              ▼  POST endpoint configuré (défaut: /api/plugin/events)
         JellyTrack Server (Next.js)
 ```
 

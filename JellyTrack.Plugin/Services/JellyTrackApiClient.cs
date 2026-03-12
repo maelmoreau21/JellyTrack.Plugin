@@ -16,7 +16,7 @@ public class JellyTrackApiClient : IDisposable
     private readonly ILogger<JellyTrackApiClient> _logger;
     private readonly ConcurrentQueue<PluginEvent> _retryQueue = new();
     private const int MaxQueueSize = 100;
-    private const string PluginEventsPath = "/api/plugin/events";
+    private const string DefaultPluginEventsPath = "/api/plugin/events";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -229,23 +229,12 @@ public class JellyTrackApiClient : IDisposable
         var trimmed = (originalPath ?? string.Empty).Trim().Trim('/');
         if (string.IsNullOrWhiteSpace(trimmed))
         {
-            return PluginEventsPath;
+            // Backward compatibility: a bare host still targets the plugin endpoint.
+            return DefaultPluginEventsPath;
         }
 
-        var normalized = "/" + trimmed;
-        var lower = normalized.ToLowerInvariant();
-
-        if (lower.EndsWith("/api/plugin/events", StringComparison.Ordinal))
-        {
-            return normalized;
-        }
-
-        if (lower.EndsWith("/api/plugin", StringComparison.Ordinal))
-        {
-            return normalized + "/events";
-        }
-
-        return normalized + PluginEventsPath;
+        // If a path is explicitly provided by the user, keep it as-is.
+        return "/" + trimmed;
     }
 
     private static async Task<string> ReadResponseBodyAsync(HttpResponseMessage response)
