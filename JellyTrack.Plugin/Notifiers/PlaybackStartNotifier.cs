@@ -56,7 +56,7 @@ public class PlaybackStartNotifier : IEventConsumer<PlaybackStartEventArgs>
             Timestamp = DateTime.UtcNow,
             User = new EventUser
             {
-                JellyfinUserId = user.Id.ToString("N"),
+                JellyfinUserId = user.Id.ToString(),
                 Username = user.Username
             },
             Media = media,
@@ -70,7 +70,7 @@ public class PlaybackStartNotifier : IEventConsumer<PlaybackStartEventArgs>
     {
         var media = new EventMedia
         {
-            JellyfinMediaId = item.Id.ToString("N"),
+            JellyfinMediaId = item.Id.ToString(),
             Title = item.Name,
             Type = item.GetBaseItemKind().ToString(),
             Genres = item.Genres?.ToList() ?? new List<string>(),
@@ -82,7 +82,7 @@ public class PlaybackStartNotifier : IEventConsumer<PlaybackStartEventArgs>
         {
             media.SeriesName = episode.SeriesName;
             media.SeasonName = episode.Season?.Name;
-            media.ParentId = episode.SeasonId.ToString("N");
+            media.ParentId = episode.SeasonId.ToString();
         }
 
         // Music info

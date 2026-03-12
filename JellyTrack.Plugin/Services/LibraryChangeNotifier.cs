@@ -122,7 +122,7 @@ public class LibraryChangeNotifier : IHostedService, IDisposable
     {
         var libraryItem = new LibraryItem
         {
-            JellyfinMediaId = item.Id.ToString("N"),
+            JellyfinMediaId = item.Id.ToString(),
             Title = item.Name,
             Type = item.GetBaseItemKind().ToString(),
             Genres = item.Genres?.ToList() ?? new List<string>(),
@@ -182,12 +182,12 @@ public class LibraryChangeNotifier : IHostedService, IDisposable
         // Parent ID
         if (item is Episode episode)
         {
-            libraryItem.ParentId = episode.SeasonId.ToString("N");
+            libraryItem.ParentId = episode.SeasonId.ToString();
         }
         else
         {
             var parent = item.GetParent();
-            libraryItem.ParentId = parent?.Id.ToString("N");
+            libraryItem.ParentId = parent?.Id.ToString();
         }
 
         return libraryItem;

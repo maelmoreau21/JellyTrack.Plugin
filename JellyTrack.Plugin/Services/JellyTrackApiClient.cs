@@ -41,23 +41,23 @@ public class JellyTrackApiClient : IDisposable
             return false;
         }
 
-        // Attempt to flush queued events first
-        await FlushRetryQueueAsync(config, cancellationToken).ConfigureAwait(false);
+        if (!TryResolveEndpoint(config.JellyTrackUrl, out var endpoint))
+        {
+            _logger.LogWarning("Invalid JellyTrack URL configured: {Url}", config.JellyTrackUrl);
+            return false;
+        }
 
-        return await SendSingleEventAsync(config, eventPayload, cancellationToken).ConfigureAwait(false);
+        // Attempt to flush queued events first
+        await FlushRetryQueueAsync(endpoint, config.ApiKey, cancellationToken).ConfigureAwait(false);
+
+        return await SendSingleEventAsync(endpoint, config.ApiKey, eventPayload, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<bool> SendSingleEventAsync(PluginConfiguration config, PluginEvent eventPayload, CancellationToken cancellationToken)
+    private async Task<bool> SendSingleEventAsync(Uri endpoint, string apiKey, PluginEvent eventPayload, CancellationToken cancellationToken)
     {
         try
         {
-            var url = config.JellyTrackUrl.TrimEnd('/');
-            using var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.ApiKey);
-            request.Content = new StringContent(
-                JsonSerializer.Serialize(eventPayload, eventPayload.GetType(), JsonOptions),
-                Encoding.UTF8,
-                "application/json");
+            using var request = BuildAuthenticatedRequest(endpoint, apiKey, eventPayload);
 
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -95,7 +95,7 @@ public class JellyTrackApiClient : IDisposable
         _retryQueue.Enqueue(eventPayload);
     }
 
-    private async Task FlushRetryQueueAsync(PluginConfiguration config, CancellationToken cancellationToken)
+    private async Task FlushRetryQueueAsync(Uri endpoint, string apiKey, CancellationToken cancellationToken)
     {
         var count = _retryQueue.Count;
         for (int i = 0; i < count; i++)
@@ -107,13 +107,7 @@ public class JellyTrackApiClient : IDisposable
 
             try
             {
-                var url = config.JellyTrackUrl.TrimEnd('/');
-                using var request = new HttpRequestMessage(HttpMethod.Post, url);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.ApiKey);
-                request.Content = new StringContent(
-                    JsonSerializer.Serialize(queued, queued.GetType(), JsonOptions),
-                    Encoding.UTF8,
-                    "application/json");
+                using var request = BuildAuthenticatedRequest(endpoint, apiKey, queued);
 
                 using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -130,6 +124,45 @@ public class JellyTrackApiClient : IDisposable
                 break;
             }
         }
+    }
+
+    private HttpRequestMessage BuildAuthenticatedRequest(Uri endpoint, string apiKey, PluginEvent eventPayload)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        request.Headers.TryAddWithoutValidation("X-Api-Key", apiKey);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(eventPayload, eventPayload.GetType(), JsonOptions),
+            Encoding.UTF8,
+            "application/json");
+
+        return request;
+    }
+
+    private static bool TryResolveEndpoint(string configuredUrl, out Uri endpoint)
+    {
+        endpoint = default!;
+
+        if (!Uri.TryCreate(configuredUrl.Trim(), UriKind.Absolute, out var parsed)
+            || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+        {
+            return false;
+        }
+
+        var builder = new UriBuilder(parsed);
+        var path = builder.Path?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(path) || path == "/")
+        {
+            builder.Path = "/api/plugin/events";
+        }
+        else
+        {
+            builder.Path = "/" + path.Trim('/');
+        }
+
+        endpoint = builder.Uri;
+        return true;
     }
 
     public void Dispose()

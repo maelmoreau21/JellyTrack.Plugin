@@ -60,11 +60,11 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
             SessionId = sessionId,
             User = new EventUser
             {
-                JellyfinUserId = user.Id.ToString("N")
+                JellyfinUserId = user.Id.ToString()
             },
             Media = new PlaybackProgressMedia
             {
-                JellyfinMediaId = item.Id.ToString("N")
+                JellyfinMediaId = item.Id.ToString()
             },
             PositionTicks = e.PlaybackPositionTicks ?? e.Session.PlayState?.PositionTicks ?? 0,
             IsPaused = e.Session.PlayState?.IsPaused ?? false,

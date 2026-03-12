@@ -8,7 +8,7 @@
           "lib/netstandard2.1/Diacritics.dll": {}
         },
         "runtime": {
-          "lib/netstandard2.1/Diacritics.dll": {}
+          "lib/netstandard2.1/_._": {}
         }
       },
       "ICU4N/60.1.0-alpha.356": {
@@ -23,7 +23,7 @@
           }
         },
         "runtime": {
-          "lib/netstandard2.0/ICU4N.dll": {
+          "lib/netstandard2.0/_._": {
             "related": ".xml"
           }
         }
@@ -39,7 +39,7 @@
           }
         },
         "runtime": {
-          "lib/netstandard2.0/ICU4N.Transliterator.dll": {
+          "lib/netstandard2.0/_._": {
             "related": ".xml"
           }
         }
@@ -52,7 +52,7 @@
           }
         },
         "runtime": {
-          "lib/net6.0/J2N.dll": {
+          "lib/net6.0/_._": {
             "related": ".xml"
           }
         }
@@ -70,7 +70,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/MediaBrowser.Common.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -94,7 +94,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/MediaBrowser.Controller.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -110,7 +110,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Jellyfin.Data.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -127,7 +127,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Jellyfin.Extensions.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -147,7 +147,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/MediaBrowser.Model.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -167,7 +167,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Emby.Naming.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -183,7 +183,7 @@
           }
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.Caching.Abstractions.dll": {
+          "lib/netstandard2.0/_._": {
             "related": ".xml"
           }
         }
@@ -201,7 +201,7 @@
           }
         },
         "runtime": {
-          "lib/netstandard2.0/Microsoft.Extensions.Caching.Memory.dll": {
+          "lib/netstandard2.0/_._": {
             "related": ".xml"
           }
         }
@@ -217,7 +217,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -236,7 +236,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Configuration.Binder.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -255,7 +255,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.DependencyInjection.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -271,7 +271,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -292,7 +292,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Logging.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -311,7 +311,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -331,7 +331,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Options.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -347,7 +347,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Primitives.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -406,7 +406,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/System.Text.Json.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -422,7 +422,7 @@
           }
         },
         "runtime": {
-          "lib/net8.0/System.Threading.Tasks.Dataflow.dll": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         },
@@ -1281,10 +1281,12 @@
         "targetAlias": "net8.0",
         "dependencies": {
           "Jellyfin.Controller": {
+            "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
             "target": "Package",
             "version": "[10.10.*, )"
           },
           "Jellyfin.Model": {
+            "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
             "target": "Package",
             "version": "[10.10.*, )"
           }

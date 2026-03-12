@@ -50,7 +50,7 @@ public class HeartbeatService : IScheduledTask
         var users = _userManager.Users
             .Select(u => new HeartbeatUser
             {
-                JellyfinUserId = u.Id.ToString("N"),
+                JellyfinUserId = u.Id.ToString(),
                 Username = u.Username
             })
             .ToList();

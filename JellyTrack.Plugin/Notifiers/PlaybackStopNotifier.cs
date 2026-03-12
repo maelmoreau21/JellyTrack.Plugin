@@ -43,11 +43,11 @@ public class PlaybackStopNotifier : IEventConsumer<PlaybackStopEventArgs>
             SessionId = e.Session.Id,
             User = new EventUser
             {
-                JellyfinUserId = user.Id.ToString("N")
+                JellyfinUserId = user.Id.ToString()
             },
             Media = new PlaybackStopMedia
             {
-                JellyfinMediaId = item.Id.ToString("N")
+                JellyfinMediaId = item.Id.ToString()
             },
             PositionTicks = e.PlaybackPositionTicks ?? 0,
             DurationTicks = item.RunTimeTicks ?? 0
