@@ -55,7 +55,8 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
 
         _backgroundCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _backgroundLoop = RunBackgroundLoopAsync(_backgroundCts.Token);
-        _logger.LogInformation("JellyTrack heartbeat background service started");
+        var loadedVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
+        _logger.LogInformation("JellyTrack heartbeat background service started (plugin assembly v{Version})", loadedVersion);
         return Task.CompletedTask;
     }
 
