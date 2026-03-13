@@ -107,6 +107,10 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
                 payload.Media.AlbumName = audio.Album;
                 payload.Media.AlbumArtist = audio.AlbumArtists?.FirstOrDefault();
                 payload.Media.Artist = audio.Artists?.FirstOrDefault();
+                if (item.ParentId != Guid.Empty)
+                {
+                    payload.Media.ParentId = item.ParentId.ToString();
+                }
             }
         }
         catch (Exception ex)

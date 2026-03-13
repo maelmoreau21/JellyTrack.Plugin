@@ -129,6 +129,10 @@ public class PlaybackStartNotifier : IEventConsumer<PlaybackStartEventArgs>
             media.AlbumName = audio.Album;
             media.AlbumArtist = audio.AlbumArtists?.FirstOrDefault();
             media.Artist = audio.Artists?.FirstOrDefault();
+            if (item.ParentId != Guid.Empty)
+            {
+                media.ParentId = item.ParentId.ToString();
+            }
         }
 
         // Resolution from video stream
