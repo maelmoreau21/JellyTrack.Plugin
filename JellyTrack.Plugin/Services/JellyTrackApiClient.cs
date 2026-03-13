@@ -125,7 +125,14 @@ public class JellyTrackApiClient : IDisposable
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("JellyTrack event {Event} sent successfully", eventPayload.Event);
+                if (string.Equals(eventPayload.Event, "PlaybackProgress", StringComparison.Ordinal))
+                {
+                    _logger.LogDebug("JellyTrack event {Event} sent successfully", eventPayload.Event);
+                }
+                else
+                {
+                    _logger.LogInformation("JellyTrack event {Event} sent successfully", eventPayload.Event);
+                }
                 return true;
             }
 
