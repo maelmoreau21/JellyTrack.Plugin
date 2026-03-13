@@ -1241,7 +1241,7 @@
     "C:\\Users\\Mael\\.nuget\\packages\\": {}
   },
   "project": {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "restore": {
       "projectUniqueName": "C:\\Users\\Mael\\Documents\\GitHub\\JellyTrack.Plugin\\JellyTrack.Plugin\\JellyTrack.Plugin.csproj",
       "projectName": "JellyTrack.Plugin",

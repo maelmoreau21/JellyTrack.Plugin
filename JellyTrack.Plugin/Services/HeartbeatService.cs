@@ -121,13 +121,7 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
 
             var pluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 
-            var users = _userManager.Users
-                .Select(u => new HeartbeatUser
-                {
-                    JellyfinUserId = u.Id.ToString(),
-                    Username = u.Username
-                })
-                .ToList();
+            var users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger);
 
             var payload = new HeartbeatEvent
             {

@@ -35,7 +35,7 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
             return;
         }
 
-        var (jellyfinUserId, username) = ResolveUser(e);
+        var (jellyfinUserId, username) = UserSnapshotResolver.ResolveUserFromSession(e.Session);
         if (string.IsNullOrWhiteSpace(jellyfinUserId))
         {
             _logger.LogWarning("PlaybackProgress ignored: could not resolve user for session {SessionId}", e.Session.Id);
@@ -81,48 +81,6 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
         };
 
         await _apiClient.SendEventAsync(payload).ConfigureAwait(false);
-    }
-
-    private static (string? JellyfinUserId, string? Username) ResolveUser(PlaybackProgressEventArgs e)
-    {
-        var user = e.Users.FirstOrDefault();
-        if (user is not null)
-        {
-            return (user.Id.ToString(), user.Username);
-        }
-
-        if (e.Session is not null)
-        {
-            var userId = ReadPropertyAsString(e.Session, "UserId");
-            var username = ReadPropertyAsString(e.Session, "UserName")
-                           ?? ReadPropertyAsString(e.Session, "Username");
-            return (userId, username);
-        }
-
-        return (null, null);
-    }
-
-    private static string? ReadPropertyAsString(object target, string propertyName)
-    {
-        var property = target.GetType().GetProperty(propertyName);
-        if (property is null)
-        {
-            return null;
-        }
-
-        var value = property.GetValue(target);
-        if (value is null)
-        {
-            return null;
-        }
-
-        if (value is Guid guid)
-        {
-            return guid == Guid.Empty ? null : guid.ToString();
-        }
-
-        var text = value.ToString();
-        return string.IsNullOrWhiteSpace(text) ? null : text;
     }
 
     /// <summary>

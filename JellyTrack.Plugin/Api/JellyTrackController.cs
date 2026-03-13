@@ -132,13 +132,7 @@ public class JellyTrackController : ControllerBase
             PluginVersion = Plugin.Instance?.Version.ToString() ?? "0.0.0.0",
             ServerName = _applicationHost.FriendlyName,
             JellyfinVersion = _applicationHost.ApplicationVersionString,
-            Users = _userManager.Users
-                .Select(u => new HeartbeatUser
-                {
-                    JellyfinUserId = u.Id.ToString(),
-                    Username = u.Username
-                })
-                .ToList()
+            Users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger)
         };
     }
 
