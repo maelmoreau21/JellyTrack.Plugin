@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text.RegularExpressions;
 using JellyTrack.Plugin.Models;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,8 @@ namespace JellyTrack.Plugin.Services;
 
 internal static class UserSnapshotResolver
 {
+    private static readonly Regex CompactGuidPattern = new("^[A-Fa-f0-9]{32}$", RegexOptions.Compiled);
+
     public static List<HeartbeatUser> ResolveHeartbeatUsers(IUserManager userManager, ILogger logger)
     {
         var rawUsers = GetUsersEnumerable(userManager, logger);
@@ -158,10 +161,21 @@ internal static class UserSnapshotResolver
 
         if (value is Guid guid)
         {
-            return guid == Guid.Empty ? null : guid.ToString();
+            return guid == Guid.Empty ? null : guid.ToString("D");
         }
 
         var text = value.ToString();
-        return string.IsNullOrWhiteSpace(text) ? null : text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var trimmed = text.Trim();
+        if (CompactGuidPattern.IsMatch(trimmed))
+        {
+            return Guid.ParseExact(trimmed, "N").ToString("D");
+        }
+
+        return trimmed;
     }
 }
