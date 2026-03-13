@@ -68,42 +68,80 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
 
         _logger.LogDebug("PlaybackProgress: {User} at {Position} for {Item}", username ?? jellyfinUserId, e.PlaybackPositionTicks, item.Name);
 
-        var payload = new PlaybackProgressEvent
+        PlaybackProgressEvent payload;
+        try
         {
-            Timestamp = DateTime.UtcNow,
-            SessionId = sessionId,
-            User = new EventUser
+            payload = new PlaybackProgressEvent
             {
-                JellyfinUserId = jellyfinUserId,
-                Username = username
-            },
-            Media = new PlaybackProgressMedia
-            {
-                JellyfinMediaId = item.Id.ToString(),
-                Title = item.Name,
-                Type = item.GetBaseItemKind().ToString(),
-                CollectionType = InferCollectionType(item),
-                DurationMs = item.RunTimeTicks.HasValue ? item.RunTimeTicks.Value / 10000 : 0,
-            },
-            Session = BuildSessionInfo(item, e.Session),
-            PositionTicks = e.PlaybackPositionTicks ?? e.Session.PlayState?.PositionTicks ?? 0,
-            IsPaused = e.Session.PlayState?.IsPaused ?? false,
-            AudioStreamIndex = e.Session.PlayState?.AudioStreamIndex,
-            SubtitleStreamIndex = e.Session.PlayState?.SubtitleStreamIndex
-        };
+                Timestamp = DateTime.UtcNow,
+                SessionId = sessionId,
+                User = new EventUser
+                {
+                    JellyfinUserId = jellyfinUserId,
+                    Username = username
+                },
+                Media = new PlaybackProgressMedia
+                {
+                    JellyfinMediaId = item.Id.ToString(),
+                    Title = item.Name,
+                    Type = item.GetBaseItemKind().ToString(),
+                    CollectionType = InferCollectionType(item),
+                    DurationMs = item.RunTimeTicks.HasValue ? item.RunTimeTicks.Value / 10000 : 0,
+                },
+                Session = BuildSessionInfo(item, e.Session),
+                PositionTicks = e.PlaybackPositionTicks ?? e.Session.PlayState?.PositionTicks ?? 0,
+                IsPaused = e.Session.PlayState?.IsPaused ?? false,
+                AudioStreamIndex = e.Session.PlayState?.AudioStreamIndex,
+                SubtitleStreamIndex = e.Session.PlayState?.SubtitleStreamIndex
+            };
 
-        if (item is Episode episode)
-        {
-            payload.Media.SeriesName = episode.SeriesName;
-            payload.Media.SeasonName = episode.Season?.Name;
-            payload.Media.ParentId = episode.SeasonId.ToString();
+            if (item is Episode episode)
+            {
+                payload.Media.SeriesName = episode.SeriesName;
+                payload.Media.SeasonName = episode.Season?.Name;
+                payload.Media.ParentId = episode.SeasonId.ToString();
+            }
+
+            if (item is Audio audio)
+            {
+                payload.Media.AlbumName = audio.Album;
+                payload.Media.AlbumArtist = audio.AlbumArtists?.FirstOrDefault();
+                payload.Media.Artist = audio.Artists?.FirstOrDefault();
+            }
         }
-
-        if (item is Audio audio)
+        catch (Exception ex)
         {
-            payload.Media.AlbumName = audio.Album;
-            payload.Media.AlbumArtist = audio.AlbumArtists?.FirstOrDefault();
-            payload.Media.Artist = audio.Artists?.FirstOrDefault();
+            _logger.LogWarning(ex, "PlaybackProgress enrichment failed for session {SessionId}. Sending minimal payload.", sessionId);
+            payload = new PlaybackProgressEvent
+            {
+                Timestamp = DateTime.UtcNow,
+                SessionId = sessionId,
+                User = new EventUser
+                {
+                    JellyfinUserId = jellyfinUserId,
+                    Username = username
+                },
+                Media = new PlaybackProgressMedia
+                {
+                    JellyfinMediaId = item.Id.ToString(),
+                    Title = item.Name,
+                    Type = item.GetBaseItemKind().ToString(),
+                    DurationMs = item.RunTimeTicks.HasValue ? item.RunTimeTicks.Value / 10000 : 0,
+                },
+                Session = new EventSession
+                {
+                    SessionId = e.Session.Id,
+                    ClientName = e.Session.Client,
+                    DeviceName = e.Session.DeviceName,
+                    PlayMethod = e.Session.PlayState?.PlayMethod?.ToString(),
+                    IpAddress = e.Session.RemoteEndPoint,
+                    PositionTicks = e.Session.PlayState?.PositionTicks ?? 0
+                },
+                PositionTicks = e.PlaybackPositionTicks ?? e.Session.PlayState?.PositionTicks ?? 0,
+                IsPaused = e.Session.PlayState?.IsPaused ?? false,
+                AudioStreamIndex = e.Session.PlayState?.AudioStreamIndex,
+                SubtitleStreamIndex = e.Session.PlayState?.SubtitleStreamIndex
+            };
         }
 
         await _apiClient.SendEventAsync(payload).ConfigureAwait(false);

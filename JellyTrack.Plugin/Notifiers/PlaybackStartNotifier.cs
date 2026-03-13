@@ -55,20 +55,51 @@ public class PlaybackStartNotifier : IEventConsumer<PlaybackStartEventArgs>
 
         _logger.LogInformation("PlaybackStart captured: user={UserId}, item={ItemId}, session={SessionId}", jellyfinUserId, item.Id, session.Id);
 
-        var media = BuildMediaInfo(item);
-        var sessionInfo = BuildSessionInfo(item, session);
-
-        var payload = new PlaybackStartEvent
+        PlaybackStartEvent payload;
+        try
         {
-            Timestamp = DateTime.UtcNow,
-            User = new EventUser
+            var media = BuildMediaInfo(item);
+            var sessionInfo = BuildSessionInfo(item, session);
+            payload = new PlaybackStartEvent
             {
-                JellyfinUserId = jellyfinUserId,
-                Username = username
-            },
-            Media = media,
-            Session = sessionInfo
-        };
+                Timestamp = DateTime.UtcNow,
+                User = new EventUser
+                {
+                    JellyfinUserId = jellyfinUserId,
+                    Username = username
+                },
+                Media = media,
+                Session = sessionInfo
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "PlaybackStart enrichment failed for session {SessionId}. Sending minimal payload.", session.Id);
+            payload = new PlaybackStartEvent
+            {
+                Timestamp = DateTime.UtcNow,
+                User = new EventUser
+                {
+                    JellyfinUserId = jellyfinUserId,
+                    Username = username
+                },
+                Media = new EventMedia
+                {
+                    JellyfinMediaId = item.Id.ToString(),
+                    Title = item.Name,
+                    Type = item.GetBaseItemKind().ToString()
+                },
+                Session = new EventSession
+                {
+                    SessionId = session.Id,
+                    ClientName = session.Client,
+                    DeviceName = session.DeviceName,
+                    PlayMethod = session.PlayState?.PlayMethod?.ToString(),
+                    IpAddress = session.RemoteEndPoint,
+                    PositionTicks = session.PlayState?.PositionTicks ?? 0
+                }
+            };
+        }
 
         await _apiClient.SendEventAsync(payload).ConfigureAwait(false);
     }
