@@ -27,15 +27,22 @@ public class PlaybackStopNotifier : IEventConsumer<PlaybackStopEventArgs>
             return;
         }
 
-        if (e.Users.Count == 0 || e.Item is null || e.Session is null)
+        if (e.Item is null || e.Session is null)
         {
+            _logger.LogDebug("PlaybackStop ignored: missing item or session");
             return;
         }
 
-        var user = e.Users[0];
+        var (jellyfinUserId, username) = ResolveUser(e);
+        if (string.IsNullOrWhiteSpace(jellyfinUserId))
+        {
+            _logger.LogWarning("PlaybackStop ignored: could not resolve user for session {SessionId}", e.Session.Id);
+            return;
+        }
+
         var item = e.Item;
 
-        _logger.LogDebug("PlaybackStop: {User} stopped {Item}", user.Username, item.Name);
+        _logger.LogInformation("PlaybackStop captured: user={UserId}, item={ItemId}, session={SessionId}", jellyfinUserId, item.Id, e.Session.Id);
 
         var payload = new PlaybackStopEvent
         {
@@ -43,7 +50,8 @@ public class PlaybackStopNotifier : IEventConsumer<PlaybackStopEventArgs>
             SessionId = e.Session.Id,
             User = new EventUser
             {
-                JellyfinUserId = user.Id.ToString()
+                JellyfinUserId = jellyfinUserId,
+                Username = username
             },
             Media = new PlaybackStopMedia
             {
@@ -54,5 +62,47 @@ public class PlaybackStopNotifier : IEventConsumer<PlaybackStopEventArgs>
         };
 
         await _apiClient.SendEventAsync(payload).ConfigureAwait(false);
+    }
+
+    private static (string? JellyfinUserId, string? Username) ResolveUser(PlaybackStopEventArgs e)
+    {
+        var user = e.Users.FirstOrDefault();
+        if (user is not null)
+        {
+            return (user.Id.ToString(), user.Username);
+        }
+
+        if (e.Session is not null)
+        {
+            var userId = ReadPropertyAsString(e.Session, "UserId");
+            var username = ReadPropertyAsString(e.Session, "UserName")
+                           ?? ReadPropertyAsString(e.Session, "Username");
+            return (userId, username);
+        }
+
+        return (null, null);
+    }
+
+    private static string? ReadPropertyAsString(object target, string propertyName)
+    {
+        var property = target.GetType().GetProperty(propertyName);
+        if (property is null)
+        {
+            return null;
+        }
+
+        var value = property.GetValue(target);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (value is Guid guid)
+        {
+            return guid == Guid.Empty ? null : guid.ToString();
+        }
+
+        var text = value.ToString();
+        return string.IsNullOrWhiteSpace(text) ? null : text;
     }
 }
