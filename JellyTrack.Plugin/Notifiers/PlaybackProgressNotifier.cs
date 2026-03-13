@@ -1,7 +1,11 @@
 using JellyTrack.Plugin.Models;
 using JellyTrack.Plugin.Services;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace JellyTrack.Plugin.Notifiers;
@@ -9,15 +13,18 @@ namespace JellyTrack.Plugin.Notifiers;
 public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs>
 {
     private readonly JellyTrackApiClient _apiClient;
+    private readonly IMediaSourceManager _mediaSourceManager;
     private readonly ILogger<PlaybackProgressNotifier> _logger;
     private readonly Dictionary<string, DateTime> _lastProgressSent = new();
     private readonly object _lock = new();
 
     public PlaybackProgressNotifier(
         JellyTrackApiClient apiClient,
+        IMediaSourceManager mediaSourceManager,
         ILogger<PlaybackProgressNotifier> logger)
     {
         _apiClient = apiClient;
+        _mediaSourceManager = mediaSourceManager;
         _logger = logger;
     }
 
@@ -72,15 +79,99 @@ public class PlaybackProgressNotifier : IEventConsumer<PlaybackProgressEventArgs
             },
             Media = new PlaybackProgressMedia
             {
-                JellyfinMediaId = item.Id.ToString()
+                JellyfinMediaId = item.Id.ToString(),
+                Title = item.Name,
+                Type = item.GetBaseItemKind().ToString(),
+                CollectionType = InferCollectionType(item),
+                DurationMs = item.RunTimeTicks.HasValue ? item.RunTimeTicks.Value / 10000 : 0,
             },
+            Session = BuildSessionInfo(item, e.Session),
             PositionTicks = e.PlaybackPositionTicks ?? e.Session.PlayState?.PositionTicks ?? 0,
             IsPaused = e.Session.PlayState?.IsPaused ?? false,
             AudioStreamIndex = e.Session.PlayState?.AudioStreamIndex,
             SubtitleStreamIndex = e.Session.PlayState?.SubtitleStreamIndex
         };
 
+        if (item is Episode episode)
+        {
+            payload.Media.SeriesName = episode.SeriesName;
+            payload.Media.SeasonName = episode.Season?.Name;
+            payload.Media.ParentId = episode.SeasonId.ToString();
+        }
+
+        if (item is Audio audio)
+        {
+            payload.Media.AlbumName = audio.Album;
+            payload.Media.AlbumArtist = audio.AlbumArtists?.FirstOrDefault();
+            payload.Media.Artist = audio.Artists?.FirstOrDefault();
+        }
+
         await _apiClient.SendEventAsync(payload).ConfigureAwait(false);
+    }
+
+    private EventSession BuildSessionInfo(BaseItem item, MediaBrowser.Controller.Session.SessionInfo session)
+    {
+        var sessionInfo = new EventSession
+        {
+            SessionId = session.Id,
+            ClientName = session.Client,
+            DeviceName = session.DeviceName,
+            PlayMethod = session.PlayState?.PlayMethod?.ToString(),
+            IpAddress = session.RemoteEndPoint,
+            PositionTicks = session.PlayState?.PositionTicks ?? 0,
+        };
+
+        if (session.TranscodingInfo is not null)
+        {
+            sessionInfo.TranscodeFps = session.TranscodingInfo.Framerate;
+            sessionInfo.Bitrate = session.TranscodingInfo.Bitrate;
+            sessionInfo.VideoCodec = session.TranscodingInfo.VideoCodec;
+            sessionInfo.AudioCodec = session.TranscodingInfo.AudioCodec;
+        }
+
+        var streams = _mediaSourceManager.GetMediaStreams(item.Id);
+        if (streams is not null)
+        {
+            var audioIdx = session.PlayState?.AudioStreamIndex;
+            var audioStream = audioIdx.HasValue
+                ? streams.FirstOrDefault(s => s.Index == audioIdx.Value && s.Type == MediaStreamType.Audio)
+                : streams.FirstOrDefault(s => s.Type == MediaStreamType.Audio && s.IsDefault);
+
+            if (audioStream is not null)
+            {
+                sessionInfo.AudioLanguage = audioStream.Language;
+                sessionInfo.AudioCodec ??= audioStream.Codec;
+            }
+
+            var subIdx = session.PlayState?.SubtitleStreamIndex;
+            if (subIdx.HasValue && subIdx.Value >= 0)
+            {
+                var subStream = streams.FirstOrDefault(s => s.Index == subIdx.Value && s.Type == MediaStreamType.Subtitle);
+                if (subStream is not null)
+                {
+                    sessionInfo.SubtitleLanguage = subStream.Language;
+                    sessionInfo.SubtitleCodec = subStream.Codec;
+                }
+            }
+
+            if (string.IsNullOrEmpty(sessionInfo.VideoCodec))
+            {
+                var videoStream = streams.FirstOrDefault(s => s.Type == MediaStreamType.Video);
+                sessionInfo.VideoCodec = videoStream?.Codec;
+            }
+        }
+
+        return sessionInfo;
+    }
+
+    private static string InferCollectionType(BaseItem item)
+    {
+        return item switch
+        {
+            Episode => "tvshows",
+            Audio => "music",
+            _ => "movies"
+        };
     }
 
     /// <summary>

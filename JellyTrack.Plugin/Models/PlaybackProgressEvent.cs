@@ -19,6 +19,9 @@ public sealed class PlaybackProgressEvent : PluginEvent
     [JsonPropertyName("media")]
     public PlaybackProgressMedia Media { get; set; } = new();
 
+    [JsonPropertyName("session")]
+    public EventSession Session { get; set; } = new();
+
     [JsonPropertyName("positionTicks")]
     public long PositionTicks { get; set; }
 
@@ -36,4 +39,34 @@ public sealed class PlaybackProgressMedia
 {
     [JsonPropertyName("jellyfinMediaId")]
     public string JellyfinMediaId { get; set; } = string.Empty;
+
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("collectionType")]
+    public string? CollectionType { get; set; }
+
+    [JsonPropertyName("seriesName")]
+    public string? SeriesName { get; set; }
+
+    [JsonPropertyName("seasonName")]
+    public string? SeasonName { get; set; }
+
+    [JsonPropertyName("albumName")]
+    public string? AlbumName { get; set; }
+
+    [JsonPropertyName("albumArtist")]
+    public string? AlbumArtist { get; set; }
+
+    [JsonPropertyName("durationMs")]
+    public long DurationMs { get; set; }
+
+    [JsonPropertyName("parentId")]
+    public string? ParentId { get; set; }
+
+    [JsonPropertyName("artist")]
+    public string? Artist { get; set; }
 }
