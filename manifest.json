@@ -9,20 +9,12 @@
         "imageUrl": "",
         "versions": [
             {
-                "version": "1.0.3.0",
-                "changelog": "## v1.0.3\n- Move connection test to a server-side plugin endpoint instead of browser fetch\n- Return detailed HTTP error messages during plugin connection tests\n- Send an immediate heartbeat after saving plugin configuration\n",
+                "version": "1.0.6.0",
+                "changelog": "## v1.0.6\n- Move connection test to a server-side plugin endpoint instead of browser fetch\n- Return detailed HTTP error messages during plugin connection tests\n- Send an immediate heartbeat after saving plugin configuration\n",
                 "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.3.0/JellyTrack.Plugin-1.0.3.0.zip",
-                "checksum": "3db822534ef0fd677b799329d33ee5b2",
-                "timestamp": "2026-03-12T13:14:58Z"
-            },
-            {
-                "version": "1.0.1.0",
-                "changelog": "## v1.0.0\n- Initial release\n- PlaybackStart / PlaybackStop / PlaybackProgress events\n- Heartbeat with user sync\n- Library change notifications with debounce\n- Admin configuration page\n",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.1.0/JellyTrack.Plugin.zip",
-                "checksum": "034cad72badbfec499722b0161c7b246",
-                "timestamp": "2026-03-11T23:05:03Z"
+                "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.6.0/JellyTrack.Plugin-1.0.6.0.zip",
+                "checksum": "6841d09223e8915a317c9f1bb3917021",
+                "timestamp": "2026-03-15T20:20:58Z"
             },
             {
                 "version": "1.0.0.0",
@@ -31,14 +23,6 @@
                 "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.0.0/JellyTrack.Plugin.zip",
                 "checksum": "7cd650bc4aae32d8f652ba35bfb6c4fe",
                 "timestamp": "2026-03-11T22:42:54Z"
-            },
-            {
-                "version": "1.0.0",
-                "changelog": "## v1.0.0\n- Initial release\n- PlaybackStart / PlaybackStop / PlaybackProgress events\n- Heartbeat with user sync\n- Library change notifications with debounce\n- Admin configuration page\n",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.0/JellyTrack.Plugin.zip",
-                "checksum": "00bc2f5a1096716f4bade02581089077",
-                "timestamp": "2026-03-11T22:14:21.079438+00:00"
             }
         ]
     }
