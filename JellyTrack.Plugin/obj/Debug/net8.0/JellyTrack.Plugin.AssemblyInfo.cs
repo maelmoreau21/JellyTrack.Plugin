@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JellyTrack.Plugin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.6.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.6.0+e4d66bdbd045f196d1186e58543fbb5fabf7c828")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.6.0+ee928536527702691f1d4fc01b46bc85767aaf39")]
 [assembly: System.Reflection.AssemblyProductAttribute("JellyTrack.Plugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JellyTrack.Plugin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.6.0")]
