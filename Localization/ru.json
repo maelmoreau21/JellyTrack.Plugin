@@ -1,0 +1,25 @@
+{
+  "plugin.title": "JellyTrack",
+  "plugin.description": "Отправляет события воспроизведения и метаданные в JellyTrack для анализа.",
+  "config.enable": "Включить плагин",
+  "config.jellytrackUrl.label": "URL JellyTrack",
+  "config.jellytrackUrl.description": "Целевой URL. Примеры: http://192.168.1.100:3000/api/plugin/events",
+  "config.apiKey.label": "API-ключ",
+  "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+  "config.heartbeatInterval.label": "Интервал heartbeat (секунды)",
+  "config.heartbeatInterval.description": "Интервал между heartbeat, отправляемыми в JellyTrack (по умолчанию: 60 секунд)",
+  "config.progressInterval.label": "Интервал PlaybackProgress (секунды)",
+  "config.progressInterval.description": "Интервал обновления прогресса воспроизведения (по умолчанию: 15 секунд)",
+  "config.preferredLanguage.label": "Предпочитаемый язык (опционально)",
+  "config.preferredLanguage.description": "Выберите язык интерфейса JellyTrack. Оставьте 'Auto' чтобы использовать язык сервера Jellyfin.",
+  "config.testConnection": "Проверить подключение",
+  "config.test.connection.success": "Успешное подключение к {endpoint}",
+  "config.test.connection.success.simple": "Подключение успешно!",
+  "config.test.connection.error": "Ошибка: {message}",
+  "config.save": "Сохранить",
+  "config.show": "Показать",
+  "config.hide": "Скрыть",
+  "config.test.inProgress": "Выполняется проверка..."
+  ,"config.apiKey.description": "API-ключ, сгенерированный в настройках JellyTrack (формат: jt_xxxxxxxxxxxx)",
+  "config.fillFields": "Пожалуйста, заполните как URL, так и API-ключ."
+}

@@ -1,5 +1,6 @@
 using System.Reflection;
 using JellyTrack.Plugin.Models;
+using System.Globalization;
 using JellyTrack.Plugin.Services;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
@@ -129,7 +130,10 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
                 PluginVersion = pluginVersion,
                 ServerName = _appHost.FriendlyName,
                 JellyfinVersion = _appHost.ApplicationVersionString,
-                Users = users
+                Users = users,
+                ServerLanguage = !string.IsNullOrWhiteSpace(config.PreferredLanguage)
+                    ? config.PreferredLanguage
+                    : CultureInfo.CurrentUICulture.Name
             };
 
             var success = await _apiClient.SendEventAsync(payload, cancellationToken).ConfigureAwait(false);

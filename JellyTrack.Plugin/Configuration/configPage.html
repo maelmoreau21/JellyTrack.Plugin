@@ -58,6 +58,24 @@
                         <div class="fieldDescription">Intervalle entre chaque mise à jour de progression de lecture (défaut: 15 secondes)</div>
                     </div>
 
+                    <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="selPreferredLanguage">Langue préférée (optionnel)</label>
+                            <select id="selPreferredLanguage" is="emby-select">
+                                <option value="">Auto — Utiliser la langue du serveur Jellyfin</option>
+                                <option value="en">English (en)</option>
+                                <option value="fr">Français (fr)</option>
+                                <option value="de">Deutsch (de)</option>
+                                <option value="es">Español (es)</option>
+                                <option value="it">Italiano (it)</option>
+                                <option value="nl">Nederlands (nl)</option>
+                                <option value="pl">Polski (pl)</option>
+                                <option value="pt-BR">Português (pt-BR)</option>
+                                <option value="ru">Русский (ru)</option>
+                                <option value="zh">中文 (zh)</option>
+                            </select>
+                            <div class="fieldDescription">Sélectionnez la langue de l'interface utilisée par JellyTrack. Laisser sur «Auto» pour appliquer automatiquement la langue du serveur Jellyfin.</div>
+                    </div>
+
                     <div style="margin-top: 1em;">
                         <button id="btnTestConnection" type="button" is="emby-button" class="raised button-submit">
                             <span>Tester la connexion</span>
@@ -75,128 +93,459 @@
         </div>
 
         <script type="text/javascript">
-            var JellyTrackConfig = {
-                pluginUniqueId: 'e5a2f2ed-7c2a-4a9f-b1d3-5e6f7a8b9c0d'
+            // Embedded translations (kept minimal for the config page)
+            var i18n = {
+                "en": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Sends playback events and media metadata to JellyTrack for analysis.",
+                    "config.enable": "Enable plugin",
+                    "config.jellytrackUrl.label": "JellyTrack URL",
+                    "config.jellytrackUrl.description": "Target URL. Examples: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "API Key",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "The API key generated in JellyTrack settings (format: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Heartbeat interval (seconds)",
+                    "config.heartbeatInterval.description": "Interval between each heartbeat sent to JellyTrack (default: 60 seconds)",
+                    "config.progressInterval.label": "PlaybackProgress interval (seconds)",
+                    "config.progressInterval.description": "Interval for playback progress updates (default: 15 seconds)",
+                    "config.preferredLanguage.label": "Preferred language (optional)",
+                    "config.preferredLanguage.description": "Select the UI language used by JellyTrack. Leave on 'Auto' to use Jellyfin's server language.",
+                    "config.testConnection": "Test connection",
+                    "config.test.inProgress": "Testing...",
+                    "config.test.connection.success": "Connection successful to {endpoint}",
+                    "config.test.connection.success.simple": "Connection successful!",
+                    "config.test.connection.error": "Error: {message}",
+                    "config.save": "Save",
+                    "config.show": "Show",
+                    "config.hide": "Hide",
+                    "config.fillFields": "Please fill both the URL and the API key."
+                },
+                "fr": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Envoie les événements de lecture et les métadonnées vers JellyTrack pour l'analyse.",
+                    "config.enable": "Activer le plugin",
+                    "config.jellytrackUrl.label": "URL de JellyTrack",
+                    "config.jellytrackUrl.description": "URL cible. Exemples : http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "Clé API",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "La clé API générée dans les paramètres de JellyTrack (format : jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Intervalle Heartbeat (secondes)",
+                    "config.heartbeatInterval.description": "Intervalle entre chaque heartbeat envoyé à JellyTrack (défaut : 60 secondes)",
+                    "config.progressInterval.label": "Intervalle PlaybackProgress (secondes)",
+                    "config.progressInterval.description": "Intervalle entre chaque mise à jour de progression (défaut : 15 secondes)",
+                    "config.preferredLanguage.label": "Langue préférée (optionnel)",
+                    "config.preferredLanguage.description": "Sélectionnez la langue utilisée par JellyTrack. Laissez sur 'Auto' pour utiliser la langue du serveur Jellyfin.",
+                    "config.testConnection": "Tester la connexion",
+                    "config.test.inProgress": "Test en cours...",
+                    "config.test.connection.success": "Connexion réussie vers {endpoint}",
+                    "config.test.connection.success.simple": "Connexion réussie !",
+                    "config.test.connection.error": "Erreur : {message}",
+                    "config.save": "Enregistrer",
+                    "config.show": "Afficher",
+                    "config.hide": "Masquer",
+                    "config.fillFields": "Veuillez remplir l'URL et la clé API."
+                },
+                "es": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Envía eventos de reproducción y metadatos a JellyTrack para análisis.",
+                    "config.enable": "Activar el plugin",
+                    "config.jellytrackUrl.label": "URL de JellyTrack",
+                    "config.jellytrackUrl.description": "URL de destino. Ejemplos: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "Clave API",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "La clave API generada en los ajustes de JellyTrack (formato: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Intervalo de heartbeat (segundos)",
+                    "config.heartbeatInterval.description": "Intervalo entre cada heartbeat enviado a JellyTrack (por defecto: 60 segundos)",
+                    "config.progressInterval.label": "Intervalo PlaybackProgress (segundos)",
+                    "config.progressInterval.description": "Intervalo para actualizaciones de progreso de reproducción (por defecto: 15 segundos)",
+                    "config.preferredLanguage.label": "Idioma preferido (opcional)",
+                    "config.preferredLanguage.description": "Seleccione el idioma de la interfaz usado por JellyTrack. Deje 'Auto' para usar el idioma del servidor Jellyfin.",
+                    "config.testConnection": "Probar conexión",
+                    "config.test.inProgress": "Probando...",
+                    "config.test.connection.success": "Conexión exitosa a {endpoint}",
+                    "config.test.connection.success.simple": "¡Conexión exitosa!",
+                    "config.test.connection.error": "Error: {message}",
+                    "config.save": "Guardar",
+                    "config.show": "Mostrar",
+                    "config.hide": "Ocultar",
+                    "config.fillFields": "Por favor, complete tanto la URL como la clave API."
+                },
+                "it": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Invia eventi di riproduzione e metadati a JellyTrack per l'analisi.",
+                    "config.enable": "Abilita plugin",
+                    "config.jellytrackUrl.label": "URL di JellyTrack",
+                    "config.jellytrackUrl.description": "URL di destinazione. Esempi: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "Chiave API",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "La chiave API generata nelle impostazioni di JellyTrack (formato: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Intervallo Heartbeat (secondi)",
+                    "config.heartbeatInterval.description": "Intervallo tra ogni heartbeat inviato a JellyTrack (default: 60 secondi)",
+                    "config.progressInterval.label": "Intervallo PlaybackProgress (secondi)",
+                    "config.progressInterval.description": "Intervallo per gli aggiornamenti di progresso della riproduzione (default: 15 secondi)",
+                    "config.preferredLanguage.label": "Lingua preferita (opzionale)",
+                    "config.preferredLanguage.description": "Seleziona la lingua dell'interfaccia per JellyTrack. Lascia 'Auto' per usare la lingua del server Jellyfin.",
+                    "config.testConnection": "Test connessione",
+                    "config.test.inProgress": "Test in corso...",
+                    "config.test.connection.success": "Connessione riuscita a {endpoint}",
+                    "config.test.connection.success.simple": "Connessione riuscita!",
+                    "config.test.connection.error": "Errore: {message}",
+                    "config.save": "Salva",
+                    "config.show": "Mostra",
+                    "config.hide": "Nascondi",
+                    "config.fillFields": "Per favore compilare sia l'URL che la chiave API."
+                },
+                "de": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Sendet Wiedergabeereignisse und Metadaten an JellyTrack zur Analyse.",
+                    "config.enable": "Plugin aktivieren",
+                    "config.jellytrackUrl.label": "JellyTrack-URL",
+                    "config.jellytrackUrl.description": "Ziel-URL. Beispiele: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "API-Schlüssel",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "Der in den JellyTrack-Einstellungen generierte API-Schlüssel (Format: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Heartbeat-Intervall (Sekunden)",
+                    "config.heartbeatInterval.description": "Intervall zwischen Heartbeats, die an JellyTrack gesendet werden (Standard: 60 Sekunden)",
+                    "config.progressInterval.label": "PlaybackProgress-Intervall (Sekunden)",
+                    "config.progressInterval.description": "Intervall für Wiedergabe-Fortschritts-Updates (Standard: 15 Sekunden)",
+                    "config.preferredLanguage.label": "Bevorzugte Sprache (optional)",
+                    "config.preferredLanguage.description": "Wählen Sie die Sprache für JellyTrack. 'Auto' verwendet die Sprache des Jellyfin-Servers.",
+                    "config.testConnection": "Verbindung testen",
+                    "config.test.inProgress": "Teste...",
+                    "config.test.connection.success": "Verbindung erfolgreich zu {endpoint}",
+                    "config.test.connection.success.simple": "Verbindung erfolgreich!",
+                    "config.test.connection.error": "Fehler: {message}",
+                    "config.save": "Speichern",
+                    "config.show": "Anzeigen",
+                    "config.hide": "Ausblenden",
+                    "config.fillFields": "Bitte sowohl die URL als auch den API-Schlüssel ausfüllen."
+                },
+                "nl": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Verstuurt afspeelgebeurtenissen en mediametadata naar JellyTrack voor analyse.",
+                    "config.enable": "Plugin inschakelen",
+                    "config.jellytrackUrl.label": "JellyTrack URL",
+                    "config.jellytrackUrl.description": "Doel-URL. Voorbeelden: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "API-sleutel",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "De API-sleutel gegenereerd in de JellyTrack-instellingen (formaat: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Heartbeat-interval (seconden)",
+                    "config.heartbeatInterval.description": "Interval tussen heartbeats naar JellyTrack (standaard: 60 seconden)",
+                    "config.progressInterval.label": "PlaybackProgress-interval (seconden)",
+                    "config.progressInterval.description": "Interval voor voortgangsupdates (standaard: 15 seconden)",
+                    "config.preferredLanguage.label": "Voorkeurstaal (optioneel)",
+                    "config.preferredLanguage.description": "Selecteer de UI-taal voor JellyTrack. Laat op 'Auto' om de taal van Jellyfin te gebruiken.",
+                    "config.testConnection": "Verbinding testen",
+                    "config.test.inProgress": "Testen...",
+                    "config.test.connection.success": "Verbonden met {endpoint}",
+                    "config.test.connection.success.simple": "Verbinding geslaagd!",
+                    "config.test.connection.error": "Fout: {message}",
+                    "config.save": "Opslaan",
+                    "config.show": "Tonen",
+                    "config.hide": "Verbergen",
+                    "config.fillFields": "Vul zowel de URL als de API-sleutel in."
+                },
+                "pl": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Wysyła zdarzenia odtwarzania i metadane do JellyTrack w celu analizy.",
+                    "config.enable": "Włącz wtyczkę",
+                    "config.jellytrackUrl.label": "Adres URL JellyTrack",
+                    "config.jellytrackUrl.description": "Adres docelowy. Przykłady: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "Klucz API",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "Klucz API wygenerowany w ustawieniach JellyTrack (format: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Interwał heartbeat (sekundy)",
+                    "config.heartbeatInterval.description": "Interwał między wysyłanymi heartbeatami do JellyTrack (domyślnie: 60 sekund)",
+                    "config.progressInterval.label": "Interwał PlaybackProgress (sekundy)",
+                    "config.progressInterval.description": "Interwał aktualizacji postępu odtwarzania (domyślnie: 15 sekund)",
+                    "config.preferredLanguage.label": "Preferowany język (opcjonalnie)",
+                    "config.preferredLanguage.description": "Wybierz język interfejsu JellyTrack. Pozostaw 'Auto', aby użyć języka serwera Jellyfin.",
+                    "config.testConnection": "Testuj połączenie",
+                    "config.test.inProgress": "Trwa test...",
+                    "config.test.connection.success": "Połączono z {endpoint}",
+                    "config.test.connection.success.simple": "Połączenie zakończone sukcesem!",
+                    "config.test.connection.error": "Błąd: {message}",
+                    "config.save": "Zapisz",
+                    "config.show": "Pokaż",
+                    "config.hide": "Ukryj",
+                    "config.fillFields": "Proszę wypełnić zarówno URL, jak i klucz API."
+                },
+                "pt-BR": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Envia eventos de reprodução e metadados para o JellyTrack para análise.",
+                    "config.enable": "Ativar plugin",
+                    "config.jellytrackUrl.label": "URL do JellyTrack",
+                    "config.jellytrackUrl.description": "URL de destino. Exemplos: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "Chave API",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "A chave API gerada nas configurações do JellyTrack (formato: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Intervalo Heartbeat (segundos)",
+                    "config.heartbeatInterval.description": "Intervalo entre cada heartbeat enviado ao JellyTrack (padrão: 60 segundos)",
+                    "config.progressInterval.label": "Intervalo PlaybackProgress (segundos)",
+                    "config.progressInterval.description": "Intervalo para atualizações de progresso de reprodução (padrão: 15 segundos)",
+                    "config.preferredLanguage.label": "Idioma preferido (opcional)",
+                    "config.preferredLanguage.description": "Selecione o idioma da interface do JellyTrack. Deixe em 'Auto' para usar o idioma do servidor Jellyfin.",
+                    "config.testConnection": "Testar conexão",
+                    "config.test.inProgress": "Testando...",
+                    "config.test.connection.success": "Conexão bem-sucedida para {endpoint}",
+                    "config.test.connection.success.simple": "Conexão bem-sucedida!",
+                    "config.test.connection.error": "Erro: {message}",
+                    "config.save": "Salvar",
+                    "config.show": "Mostrar",
+                    "config.hide": "Ocultar",
+                    "config.fillFields": "Por favor, preencha tanto a URL quanto a chave API."
+                },
+                "ru": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "Отправляет события воспроизведения и метаданные в JellyTrack для анализа.",
+                    "config.enable": "Включить плагин",
+                    "config.jellytrackUrl.label": "URL JellyTrack",
+                    "config.jellytrackUrl.description": "Целевой URL. Примеры: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "API-ключ",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "API-ключ, сгенерированный в настройках JellyTrack (формат: jt_xxxxxxxxxxxx)",
+                    "config.heartbeatInterval.label": "Интервал heartbeat (секунды)",
+                    "config.heartbeatInterval.description": "Интервал между heartbeat, отправляемыми в JellyTrack (по умолчанию: 60 секунд)",
+                    "config.progressInterval.label": "Интервал PlaybackProgress (секунды)",
+                    "config.progressInterval.description": "Интервал обновления прогресса воспроизведения (по умолчанию: 15 секунд)",
+                    "config.preferredLanguage.label": "Предпочитаемый язык (опционально)",
+                    "config.preferredLanguage.description": "Выберите язык интерфейса JellyTrack. Оставьте 'Auto' чтобы использовать язык сервера Jellyfin.",
+                    "config.testConnection": "Проверить подключение",
+                    "config.test.inProgress": "Выполняется проверка...",
+                    "config.test.connection.success": "Успешное подключение к {endpoint}",
+                    "config.test.connection.success.simple": "Подключение успешно!",
+                    "config.test.connection.error": "Ошибка: {message}",
+                    "config.save": "Сохранить",
+                    "config.show": "Показать",
+                    "config.hide": "Скрыть",
+                    "config.fillFields": "Пожалуйста, заполните как URL, так и API-ключ."
+                },
+                "zh": {
+                    "plugin.title": "JellyTrack",
+                    "plugin.description": "将播放事件和媒体元数据发送到 JellyTrack 以进行分析。",
+                    "config.enable": "启用插件",
+                    "config.jellytrackUrl.label": "JellyTrack 地址",
+                    "config.jellytrackUrl.description": "目标地址。例如: http://192.168.1.100:3000/api/plugin/events",
+                    "config.apiKey.label": "API 密钥",
+                    "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+                    "config.apiKey.description": "在 JellyTrack 设置中生成的 API 密钥（格式：jt_xxxxxxxxxxxx）",
+                    "config.heartbeatInterval.label": "Heartbeat 间隔（秒）",
+                    "config.heartbeatInterval.description": "发送给 JellyTrack 的 heartbeat 间隔（默认：60 秒）",
+                    "config.progressInterval.label": "PlaybackProgress 间隔（秒）",
+                    "config.progressInterval.description": "播放进度更新间隔（默认：15 秒）",
+                    "config.preferredLanguage.label": "首选语言（可选）",
+                    "config.preferredLanguage.description": "选择 JellyTrack 使用的界面语言。选择“自动”以使用 Jellyfin 服务器语言。",
+                    "config.testConnection": "测试连接",
+                    "config.test.inProgress": "正在测试...",
+                    "config.test.connection.success": "已成功连接到 {endpoint}",
+                    "config.test.connection.success.simple": "连接成功！",
+                    "config.test.connection.error": "错误: {message}",
+                    "config.save": "保存",
+                    "config.show": "显示",
+                    "config.hide": "隐藏",
+                    "config.fillFields": "请填写 URL 和 API 密钥。"
+                }
             };
 
-            document.querySelector('#jellytrackConfigPage')
-                .addEventListener('pageshow', function () {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#chkEnabled').checked = config.Enabled;
-                        document.querySelector('#txtJellyTrackUrl').value = config.JellyTrackUrl || '';
-                        document.querySelector('#txtApiKey').value = config.ApiKey || '';
-                        document.querySelector('#txtHeartbeatInterval').value = config.HeartbeatIntervalSeconds || 60;
-                        document.querySelector('#txtProgressInterval').value = config.ProgressIntervalSeconds || 15;
-                        Dashboard.hideLoadingMsg();
+            var currentLang = 'en';
+
+            function pickLocale(code) {
+                if (!code) return 'en';
+                code = code.trim();
+                if (i18n[code]) return code;
+                var base = code.split('-')[0];
+                if (i18n[base]) return base;
+                return 'en';
+            }
+
+            function translate(key, vars, langOverride) {
+                var lang = langOverride ? pickLocale(langOverride) : pickLocale(currentLang || (navigator.language || navigator.userLanguage || 'en'));
+                var dict = i18n[lang] || i18n['en'];
+                var msg = dict[key] || (i18n['en'] && i18n['en'][key]) || key;
+                if (vars) {
+                    Object.keys(vars).forEach(function (k) {
+                        msg = msg.replace(new RegExp('\{' + k + '\}', 'g'), vars[k]);
                     });
-                });
+                }
+                return msg;
+            }
 
-            document.querySelector('#btnToggleApiKey')
-                .addEventListener('click', function () {
-                    var input = document.querySelector('#txtApiKey');
-                    var btn = document.querySelector('#btnToggleApiKey');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        btn.textContent = 'Masquer';
-                    } else {
-                        input.type = 'password';
-                        btn.textContent = 'Afficher';
-                    }
-                });
+            function applyTranslations() {
+                var lang = pickLocale(currentLang || (navigator.language || navigator.userLanguage || 'en'));
+                document.querySelector('.sectionTitle').textContent = translate('plugin.title', null, lang);
+                var p = document.querySelector('.verticalSection p'); if (p) p.textContent = translate('plugin.description', null, lang);
+                var chkSpan = document.querySelector('label.emby-checkbox-label span'); if (chkSpan) chkSpan.textContent = translate('config.enable', null, lang);
 
-            document.querySelector('#btnTestConnection')
-                .addEventListener('click', function () {
-                    var button = document.querySelector('#btnTestConnection');
-                    var resultEl = document.querySelector('#testResult');
-                    resultEl.textContent = 'Test en cours...';
-                    resultEl.style.color = '';
-                    button.setAttribute('disabled', 'disabled');
+                var lbl = document.querySelector('label[for="txtJellyTrackUrl"]'); if (lbl) lbl.textContent = translate('config.jellytrackUrl.label', null, lang);
+                var urlDesc = lbl && lbl.parentElement.querySelector('.fieldDescription'); if (urlDesc) urlDesc.textContent = translate('config.jellytrackUrl.description', null, lang);
 
-                    var url = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
-                    var apiKey = document.querySelector('#txtApiKey').value.trim();
+                var apiLabel = document.querySelector('label[for="txtApiKey"]'); if (apiLabel) apiLabel.textContent = translate('config.apiKey.label', null, lang);
+                var apiInput = document.querySelector('#txtApiKey'); if (apiInput) apiInput.placeholder = translate('config.apiKey.placeholder', null, lang);
+                var apiDesc = apiLabel && apiLabel.parentElement.querySelector('.fieldDescription'); if (apiDesc) apiDesc.textContent = translate('config.apiKey.description', null, lang);
 
-                    if (!url || !apiKey) {
-                        resultEl.textContent = 'Veuillez remplir l\'URL et la clé API.';
-                        resultEl.style.color = 'red';
-                        button.removeAttribute('disabled');
-                        return;
-                    }
+                var hbLabel = document.querySelector('label[for="txtHeartbeatInterval"]'); if (hbLabel) hbLabel.textContent = translate('config.heartbeatInterval.label', null, lang);
+                var hbDesc = hbLabel && hbLabel.parentElement.querySelector('.fieldDescription'); if (hbDesc) hbDesc.textContent = translate('config.heartbeatInterval.description', null, lang);
 
-                    var requestUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function')
-                        ? ApiClient.getUrl('JellyTrack/Test')
-                        : '/JellyTrack/Test';
+                var prLabel = document.querySelector('label[for="txtProgressInterval"]'); if (prLabel) prLabel.textContent = translate('config.progressInterval.label', null, lang);
+                var prDesc = prLabel && prLabel.parentElement.querySelector('.fieldDescription'); if (prDesc) prDesc.textContent = translate('config.progressInterval.description', null, lang);
 
-                    fetch(requestUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            url: url,
-                            apiKey: apiKey
-                        })
-                    }).then(async function (response) {
-                        var data = null;
-                        try {
-                            data = await response.json();
-                        } catch (err) {
-                            data = null;
-                        }
+                var prefLabel = document.querySelector('label[for="selPreferredLanguage"]'); if (prefLabel) prefLabel.textContent = translate('config.preferredLanguage.label', null, lang);
+                var prefDesc = prefLabel && prefLabel.parentElement.querySelector('.fieldDescription'); if (prefDesc) prefDesc.textContent = translate('config.preferredLanguage.description', null, lang);
 
-                        if (response.ok) {
-                            resultEl.textContent = data && data.endpoint
-                                ? 'Connexion réussie vers ' + data.endpoint
-                                : 'Connexion réussie !';
-                            resultEl.style.color = 'green';
-                        } else {
-                            var message = data && data.message ? data.message : ('HTTP ' + response.status);
-                            resultEl.textContent = 'Erreur: ' + message;
-                            resultEl.style.color = 'red';
-                        }
-                    }).catch(function (err) {
-                        resultEl.textContent = 'Erreur: ' + err.message;
-                        resultEl.style.color = 'red';
-                    }).finally(function () {
-                        button.removeAttribute('disabled');
-                    });
-                });
+                var btnTest = document.querySelector('#btnTestConnection'); if (btnTest) {
+                    var s = btnTest.querySelector('span'); if (s) s.textContent = translate('config.testConnection', null, lang); else btnTest.textContent = translate('config.testConnection', null, lang);
+                }
+                var saveBtn = document.querySelector('button[type="submit"]'); if (saveBtn) { var s2 = saveBtn.querySelector('span'); if (s2) s2.textContent = translate('config.save', null, lang); else saveBtn.textContent = translate('config.save', null, lang); }
 
-            document.querySelector('#jellytrackConfigForm')
-                .addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    Dashboard.showLoadingMsg();
+                var toggleBtn = document.querySelector('#btnToggleApiKey'); if (toggleBtn) toggleBtn.textContent = translate('config.show', null, lang);
+            }
 
-                    ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
-                        var urlValue = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
-                        var apiKeyValue = document.querySelector('#txtApiKey').value.trim();
+            function getLocalizationBaseUrl() {
+                return (window.ApiClient && typeof ApiClient.getUrl === 'function') ? ApiClient.getUrl('JellyTrack/Localization') : '/JellyTrack/Localization';
+            }
 
-                        document.querySelector('#txtJellyTrackUrl').value = urlValue;
-                        document.querySelector('#txtApiKey').value = apiKeyValue;
+            function loadLocale(lang) {
+                var target = lang || (navigator.language || navigator.userLanguage || 'en');
+                var baseUrl = getLocalizationBaseUrl();
+                var tried = [];
+                if (target) tried.push(target);
+                var base = (target && target.indexOf('-') !== -1) ? target.split('-')[0] : null;
+                if (base && tried.indexOf(base) === -1) tried.push(base);
+                if (tried.indexOf('en') === -1) tried.push('en');
 
-                        config.Enabled = document.querySelector('#chkEnabled').checked;
-                        config.JellyTrackUrl = urlValue;
-                        config.ApiKey = apiKeyValue;
-                        config.HeartbeatIntervalSeconds = parseInt(document.querySelector('#txtHeartbeatInterval').value, 10) || 60;
-                        config.ProgressIntervalSeconds = parseInt(document.querySelector('#txtProgressInterval').value, 10) || 15;
-
-                        ApiClient.updatePluginConfiguration(JellyTrackConfig.pluginUniqueId, config).then(function () {
-                            var heartbeatUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function')
-                                ? ApiClient.getUrl('JellyTrack/HeartbeatNow')
-                                : '/JellyTrack/HeartbeatNow';
-
-                            return fetch(heartbeatUrl, {
-                                method: 'POST'
-                            }).catch(function () {
-                                return null;
-                            }).finally(function () {
-                                Dashboard.processPluginConfigurationUpdateResult();
-                            });
+                var attempt = function (index) {
+                    if (index >= tried.length) return Promise.resolve('en');
+                    var l = tried[index];
+                    var url = baseUrl + '/' + encodeURIComponent(l);
+                    return fetch(url).then(function (resp) {
+                        if (!resp.ok) throw new Error('not found');
+                        return resp.json().then(function (json) {
+                            i18n[l] = json;
+                            return l;
                         });
+                    }).catch(function () {
+                        return attempt(index + 1);
                     });
+                };
 
-                    return false;
+                return attempt(0).then(function (loaded) {
+                    currentLang = pickLocale(loaded);
+                    applyTranslations();
+                    return loaded;
+                }).catch(function () {
+                    currentLang = pickLocale('en');
+                    applyTranslations();
+                    return 'en';
                 });
+            }
+
+            var JellyTrackConfig = { pluginUniqueId: 'e5a2f2ed-7c2a-4a9f-b1d3-5e6f7a8b9c0d' };
+
+            document.querySelector('#jellytrackConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#chkEnabled').checked = config.Enabled;
+                    document.querySelector('#txtJellyTrackUrl').value = config.JellyTrackUrl || '';
+                    document.querySelector('#txtApiKey').value = config.ApiKey || '';
+                    document.querySelector('#txtHeartbeatInterval').value = config.HeartbeatIntervalSeconds || 60;
+                    document.querySelector('#txtProgressInterval').value = config.ProgressIntervalSeconds || 15;
+                    document.querySelector('#selPreferredLanguage').value = config.PreferredLanguage || '';
+
+                    // Determine effective language (config override > browser) and load translations
+                    var effective = config.PreferredLanguage && config.PreferredLanguage.trim() ? config.PreferredLanguage : (navigator.language || navigator.userLanguage || 'en');
+                    loadLocale(effective).finally(function () { Dashboard.hideLoadingMsg(); });
+                });
+            });
+
+            document.querySelector('#selPreferredLanguage').addEventListener('change', function () {
+                var val = this.value || '';
+                var effective = val || (navigator.language || navigator.userLanguage || 'en');
+                loadLocale(effective);
+            });
+
+            document.querySelector('#btnToggleApiKey').addEventListener('click', function () {
+                var input = document.querySelector('#txtApiKey');
+                var btn = document.querySelector('#btnToggleApiKey');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    btn.textContent = translate('config.hide');
+                } else {
+                    input.type = 'password';
+                    btn.textContent = translate('config.show');
+                }
+            });
+
+            document.querySelector('#btnTestConnection').addEventListener('click', function () {
+                var button = document.querySelector('#btnTestConnection');
+                var resultEl = document.querySelector('#testResult');
+                resultEl.textContent = translate('config.test.inProgress');
+                resultEl.style.color = '';
+                button.setAttribute('disabled', 'disabled');
+
+                var url = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
+                var apiKey = document.querySelector('#txtApiKey').value.trim();
+
+                if (!url || !apiKey) {
+                    resultEl.textContent = translate('config.fillFields');
+                    resultEl.style.color = 'red';
+                    button.removeAttribute('disabled');
+                    return;
+                }
+
+                var requestUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function') ? ApiClient.getUrl('JellyTrack/Test') : '/JellyTrack/Test';
+
+                fetch(requestUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url, apiKey: apiKey })
+                }).then(async function (response) {
+                    var data = null;
+                    try { data = await response.json(); } catch (err) { data = null; }
+
+                    if (response.ok) {
+                        if (data && data.endpoint) {
+                            resultEl.textContent = translate('config.test.connection.success', { endpoint: data.endpoint });
+                        } else {
+                            resultEl.textContent = translate('config.test.connection.success.simple');
+                        }
+                        resultEl.style.color = 'green';
+                    } else {
+                        var message = data && data.message ? data.message : ('HTTP ' + response.status);
+                        resultEl.textContent = translate('config.test.connection.error', { message: message });
+                        resultEl.style.color = 'red';
+                    }
+                }).catch(function (err) {
+                    resultEl.textContent = translate('config.test.connection.error', { message: err.message });
+                    resultEl.style.color = 'red';
+                }).finally(function () { button.removeAttribute('disabled'); });
+            });
+
+            document.querySelector('#jellytrackConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(JellyTrackConfig.pluginUniqueId).then(function (config) {
+                    var urlValue = document.querySelector('#txtJellyTrackUrl').value.trim().replace(/\/+$/, '');
+                    var apiKeyValue = document.querySelector('#txtApiKey').value.trim();
+
+                    document.querySelector('#txtJellyTrackUrl').value = urlValue;
+                    document.querySelector('#txtApiKey').value = apiKeyValue;
+
+                    config.Enabled = document.querySelector('#chkEnabled').checked;
+                    config.JellyTrackUrl = urlValue;
+                    config.ApiKey = apiKeyValue;
+                    config.HeartbeatIntervalSeconds = parseInt(document.querySelector('#txtHeartbeatInterval').value, 10) || 60;
+                    config.ProgressIntervalSeconds = parseInt(document.querySelector('#txtProgressInterval').value, 10) || 15;
+                    config.PreferredLanguage = document.querySelector('#selPreferredLanguage').value || '';
+
+                    ApiClient.updatePluginConfiguration(JellyTrackConfig.pluginUniqueId, config).then(function () {
+                        var heartbeatUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function') ? ApiClient.getUrl('JellyTrack/HeartbeatNow') : '/JellyTrack/HeartbeatNow';
+                        return fetch(heartbeatUrl, { method: 'POST' }).catch(function () { return null; }).finally(function () { Dashboard.processPluginConfigurationUpdateResult(); });
+                    });
+                });
+
+                return false;
+            });
         </script>
     </div>
 </body>

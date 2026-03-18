@@ -18,6 +18,9 @@ public sealed class HeartbeatEvent : PluginEvent
 
     [JsonPropertyName("users")]
     public List<HeartbeatUser> Users { get; set; } = new();
+
+    [JsonPropertyName("serverLanguage")]
+    public string? ServerLanguage { get; set; }
 }
 
 public sealed class HeartbeatUser

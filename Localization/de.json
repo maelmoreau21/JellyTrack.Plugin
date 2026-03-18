@@ -1,0 +1,25 @@
+{
+  "plugin.title": "JellyTrack",
+  "plugin.description": "Sendet Wiedergabeereignisse und Metadaten an JellyTrack zur Analyse.",
+  "config.enable": "Plugin aktivieren",
+  "config.jellytrackUrl.label": "JellyTrack-URL",
+  "config.jellytrackUrl.description": "Ziel-URL. Beispiele: http://192.168.1.100:3000/api/plugin/events",
+  "config.apiKey.label": "API-Schlüssel",
+  "config.apiKey.placeholder": "jt_xxxxxxxxxxxx",
+  "config.heartbeatInterval.label": "Heartbeat-Intervall (Sekunden)",
+  "config.heartbeatInterval.description": "Intervall zwischen Heartbeats, die an JellyTrack gesendet werden (Standard: 60 Sekunden)",
+  "config.progressInterval.label": "PlaybackProgress-Intervall (Sekunden)",
+  "config.progressInterval.description": "Intervall für Wiedergabe-Fortschritts-Updates (Standard: 15 Sekunden)",
+  "config.preferredLanguage.label": "Bevorzugte Sprache (optional)",
+  "config.preferredLanguage.description": "Wählen Sie die Sprache für JellyTrack. 'Auto' verwendet die Sprache des Jellyfin-Servers.",
+  "config.testConnection": "Verbindung testen",
+  "config.test.connection.success": "Verbindung erfolgreich zu {endpoint}",
+  "config.test.connection.success.simple": "Verbindung erfolgreich!",
+  "config.test.connection.error": "Fehler: {message}",
+  "config.save": "Speichern",
+  "config.show": "Anzeigen",
+  "config.hide": "Ausblenden",
+  "config.test.inProgress": "Teste..."
+  ,"config.apiKey.description": "Der in den JellyTrack-Einstellungen generierte API-Schlüssel (Format: jt_xxxxxxxxxxxx)",
+  "config.fillFields": "Bitte sowohl die URL als auch den API-Schlüssel ausfüllen."
+}

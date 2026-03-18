@@ -3,6 +3,11 @@
 
 Plugin pour Jellyfin qui envoie les événements de lecture et les métadonnées vers **JellyTrack** pour l'analyse et les statistiques.
 
+## Important — dépendance au serveur JellyTrack
+
+- Le plugin envoie les événements vers une instance JellyTrack : assurez-vous d'avoir une instance JellyTrack accessible (URL + clé API) avant d'activer le plugin. Sans serveur JellyTrack, le plugin n'enverra pas d'événements et n'aura pas d'effet visible.
+- **Installation recommandée** : via le dépôt Jellyfin (voir ci‑dessous). Configurez l'URL JellyTrack dans la page de configuration du plugin et testez la connexion avant de laisser le plugin en production.
+
 ## Installation (RECOMMANDÉE : dépôt Jellyfin)
 
 Privilégiez l'installation via le dépôt de plugins Jellyfin — c'est la méthode la plus simple et la plus sûre pour maintenir le plugin à jour.
@@ -66,3 +71,8 @@ Pour la documentation technique : [CONTEXT.md](JellyTrack.Plugin/CONTEXT.md)
 ## Licence
 
 MIT
+
+## Internationalisation / Langues
+
+- Le plugin détecte par défaut la langue d'interface du serveur Jellyfin et l'envoie dans le `Heartbeat` vers JellyTrack. Cela permet à JellyTrack d'utiliser par défaut la même langue que votre serveur Jellyfin.
+- Vous pouvez surcharger ce comportement dans la configuration du plugin (option **Langue préférée**) : laissez vide pour utiliser la langue de Jellyfin, ou renseignez un code de langue ISO (ex: `en`, `fr`, `pt-BR`).

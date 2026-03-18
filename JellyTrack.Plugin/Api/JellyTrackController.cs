@@ -5,6 +5,8 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
+using System.IO;
 
 namespace JellyTrack.Plugin.Api;
 
@@ -27,6 +29,33 @@ public class JellyTrackController : ControllerBase
         _applicationHost = applicationHost;
         _userManager = userManager;
         _logger = logger;
+    }
+
+    [HttpGet("Localization/{lang}")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    public ActionResult GetLocalization(string lang)
+    {
+        if (string.IsNullOrWhiteSpace(lang)) lang = "en";
+
+        var assembly = typeof(JellyTrackController).Assembly;
+        var tried = new[]
+        {
+            $"{typeof(Plugin).Namespace}.Localization.{lang}.json",
+            $"{typeof(Plugin).Namespace}.Localization.{(lang.Contains('-') ? lang.Split('-')[0] : lang)}.json",
+            $"{typeof(Plugin).Namespace}.Localization.en.json"
+        };
+
+        foreach (var name in tried)
+        {
+            using var stream = assembly.GetManifestResourceStream(name);
+            if (stream is null) continue;
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            return Content(json, "application/json");
+        }
+
+        return NotFound();
     }
 
     [HttpPost("Test")]

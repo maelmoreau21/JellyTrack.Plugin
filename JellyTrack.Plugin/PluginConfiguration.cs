@@ -13,4 +13,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public int ProgressIntervalSeconds { get; set; } = 15;
 
     public bool Enabled { get; set; } = true;
+
+    // Optional: preferred language for the plugin. Leave empty to use Jellyfin's current UI language.
+    public string PreferredLanguage { get; set; } = string.Empty;
 }

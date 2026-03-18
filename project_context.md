@@ -75,6 +75,11 @@ Toute la configuration est dans l'admin Jellyfin :
 - Intervalle PlaybackProgress (défaut: 15s)
 - Toggle activer/désactiver
 
+## Langue / Internationalisation
+
+- Le plugin inclut désormais l'information `serverLanguage` dans le `Heartbeat` envoyé à JellyTrack. Par défaut la valeur envoyée est la langue UI actuelle du processus Jellyfin (déduite de `CurrentUICulture`).
+- Une option de configuration `PreferredLanguage` permet d'outrepasser ce comportement (laisser vide pour utiliser la langue du serveur). Le format attendu est un code de langue ISO (`en`, `fr`, `pt-BR`, etc.).
+
 ## Structure des fichiers
 
 ```
