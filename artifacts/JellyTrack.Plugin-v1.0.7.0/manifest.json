@@ -9,14 +9,6 @@
         "imageUrl": "",
         "versions": [
             {
-                "version": "1.0.7.0",
-                "changelog": "## v1.0.7\n- Build release compiled against Jellyfin 10.11.6\n",
-                "targetAbi": "10.11.6.0",
-                "sourceUrl": "artifacts/JellyTrack.Plugin-v1.0.7.0.zip",
-                "checksum": "d0abec5699765761495aced418188df0",
-                "timestamp": "2026-03-21T12:00:00Z"
-            },
-            {
                 "version": "1.0.6.0",
                 "changelog": "## v1.0.6\n- Move connection test to a server-side plugin endpoint instead of browser fetch\n- Return detailed HTTP error messages during plugin connection tests\n- Send an immediate heartbeat after saving plugin configuration\n",
                 "targetAbi": "10.10.0.0",

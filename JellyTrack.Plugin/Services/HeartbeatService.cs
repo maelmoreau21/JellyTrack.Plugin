@@ -187,12 +187,13 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
         {
             new TaskTriggerInfo
             {
-                Type = TaskTriggerInfo.TriggerInterval,
+                // Use enum values from MediaBrowser.Model.Tasks.TaskTriggerInfoType (IntervalTrigger, StartupTrigger)
+                Type = TaskTriggerInfoType.IntervalTrigger,
                 IntervalTicks = TimeSpan.FromSeconds(intervalSeconds).Ticks
             },
             new TaskTriggerInfo
             {
-                Type = TaskTriggerInfo.TriggerStartup
+                Type = TaskTriggerInfoType.StartupTrigger
             }
         };
     }
