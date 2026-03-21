@@ -13,8 +13,8 @@
                 "changelog": "## v1.0.7\n- Build release compiled against Jellyfin 10.11.6\n",
                 "targetAbi": "10.11.6.0",
                 "sourceUrl": "artifacts/JellyTrack.Plugin-v1.0.7.0.zip",
-                "checksum": "d0abec5699765761495aced418188df0",
-                "timestamp": "2026-03-21T12:00:00Z"
+                "checksum": "aa831768ea93c0553337bcf0c8e8deb1",
+                "timestamp": "2026-03-21T16:30:59Z"
             },
             {
                 "version": "1.0.6.0",
