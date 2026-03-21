@@ -1,0 +1,13 @@
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\bin\Release\net9.0\JellyTrack.Plugin.deps.json
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\bin\Release\net9.0\JellyTrack.Plugin.dll
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\bin\Release\net9.0\JellyTrack.Plugin.pdb
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.csproj.AssemblyReference.cache
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.AssemblyInfoInputs.cache
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.AssemblyInfo.cs
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.csproj.CoreCompileInputs.cache
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.sourcelink.json
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.dll
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\refint\JellyTrack.Plugin.dll
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\JellyTrack.Plugin.pdb
+C:\Users\Mael\Documents\GitHub\JellyTrack.Plugin\JellyTrack.Plugin\obj\Release\net9.0\ref\JellyTrack.Plugin.dll

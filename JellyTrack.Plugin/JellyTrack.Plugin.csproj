@@ -24,7 +24,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
-    <EmbeddedResource Include="Localization\*.json" />
+    <EmbeddedResource Include="..\Localization\*.json">
+      <Link>Localization\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
