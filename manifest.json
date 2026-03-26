@@ -10,11 +10,11 @@
         "versions": [
             {
                 "version": "1.0.7.0",
-                "changelog": "## v1.0.7\n- Build release compiled against Jellyfin 10.11.6\n",
+                "changelog": "## v1.0.7\n- Standardized zapping threshold to 60 seconds\n- Improved user activity tracking with lastActive field\n- Performance optimizations for mobile UI\n",
                 "targetAbi": "10.11.6.0",
-                "sourceUrl": "artifacts/JellyTrack.Plugin-v1.0.7.0.zip",
-                "checksum": "aa831768ea93c0553337bcf0c8e8deb1",
-                "timestamp": "2026-03-21T16:30:59Z"
+                "sourceUrl": "https://github.com/maelmoreau21/JellyTrack.Plugin/releases/download/v1.0.7.0/JellyTrack.Plugin.zip",
+                "checksum": "9ae54b253e8b0ca413d02718f33b41d5",
+                "timestamp": "2026-03-26T21:33:04Z"
             },
             {
                 "version": "1.0.6.0",

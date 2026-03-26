@@ -20,6 +20,7 @@ internal static class UserSnapshotResolver
             var userId = ReadPropertyAsString(userObj, "Id");
             if (string.IsNullOrWhiteSpace(userId))
             {
+                logger.LogWarning("Heartbeat: User found but ID is null/empty. Skipping.");
                 continue;
             }
 
@@ -127,7 +128,7 @@ internal static class UserSnapshotResolver
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Unable to read user manager property {PropertyName}", property.Name);
+            logger.LogError(ex, "CRITICAL: Unable to read user manager property '{PropertyName}'. This usually indicates a Jellyfin version mismatch.", property.Name);
             return null;
         }
     }
@@ -140,7 +141,7 @@ internal static class UserSnapshotResolver
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "Unable to invoke user manager method {MethodName}", method.Name);
+            logger.LogError(ex, "CRITICAL: Unable to invoke user manager method '{MethodName}'.", method.Name);
             return null;
         }
     }
