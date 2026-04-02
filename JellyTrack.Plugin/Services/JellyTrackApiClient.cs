@@ -224,8 +224,17 @@ public class JellyTrackApiClient : IDisposable
             return false;
         }
 
+        // Avoid accepting URLs with embedded credentials (userinfo),
+        // which are easy to leak in logs and browser history.
+        if (!string.IsNullOrWhiteSpace(parsed.UserInfo))
+        {
+            return false;
+        }
+
         var builder = new UriBuilder(parsed);
         builder.Path = NormalizeEndpointPath(builder.Path);
+        builder.Query = string.Empty;
+        builder.Fragment = string.Empty;
 
         endpoint = builder.Uri;
         return true;

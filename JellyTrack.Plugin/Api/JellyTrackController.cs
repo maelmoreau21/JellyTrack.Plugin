@@ -3,6 +3,7 @@ using JellyTrack.Plugin.Models;
 using JellyTrack.Plugin.Services;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -17,18 +18,62 @@ public class JellyTrackController : ControllerBase
     private readonly JellyTrackApiClient _apiClient;
     private readonly IServerApplicationHost _applicationHost;
     private readonly IUserManager _userManager;
+    private readonly IAuthorizationContext _authorizationContext;
     private readonly ILogger<JellyTrackController> _logger;
 
     public JellyTrackController(
         JellyTrackApiClient apiClient,
         IServerApplicationHost applicationHost,
         IUserManager userManager,
+        IAuthorizationContext authorizationContext,
         ILogger<JellyTrackController> logger)
     {
         _apiClient = apiClient;
         _applicationHost = applicationHost;
         _userManager = userManager;
+        _authorizationContext = authorizationContext;
         _logger = logger;
+    }
+
+    private static bool IsAdminUserObject(object? user)
+    {
+        if (user is null)
+        {
+            return false;
+        }
+
+        var userType = user.GetType();
+        var directAdminProp = userType.GetProperty("IsAdministrator");
+        if (directAdminProp?.GetValue(user) is bool isAdminDirect)
+        {
+            return isAdminDirect;
+        }
+
+        var policyProp = userType.GetProperty("Policy");
+        var policyObj = policyProp?.GetValue(user);
+        var policyAdminProp = policyObj?.GetType().GetProperty("IsAdministrator");
+        if (policyAdminProp?.GetValue(policyObj) is bool isAdminFromPolicy)
+        {
+            return isAdminFromPolicy;
+        }
+
+        return false;
+    }
+
+    private async Task<bool> IsAuthorizedAdminRequestAsync(CancellationToken cancellationToken)
+    {
+        var auth = await _authorizationContext.GetAuthorizationInfo(Request).ConfigureAwait(false);
+        if (auth is null || !auth.IsAuthenticated)
+        {
+            return false;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        return IsAdminUserObject(auth.User);
     }
 
     [HttpGet("Localization/{lang}")]
@@ -65,6 +110,16 @@ public class JellyTrackController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
     public async Task<ActionResult> TestConnection([FromBody] TestRequest request, CancellationToken cancellationToken)
     {
+        if (!await IsAuthorizedAdminRequestAsync(cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogWarning("Unauthorized access attempt on JellyTrack/Test endpoint.");
+            return Unauthorized(new TestConnectionResponse
+            {
+                Success = false,
+                Message = "Administrator authentication required."
+            });
+        }
+
         if (string.IsNullOrWhiteSpace(request.Url) || string.IsNullOrWhiteSpace(request.ApiKey))
         {
             return BadRequest(new TestConnectionResponse
@@ -117,6 +172,16 @@ public class JellyTrackController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.ServiceUnavailable)]
     public async Task<ActionResult> SendHeartbeatNow(CancellationToken cancellationToken)
     {
+        if (!await IsAuthorizedAdminRequestAsync(cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogWarning("Unauthorized access attempt on JellyTrack/HeartbeatNow endpoint.");
+            return Unauthorized(new TestConnectionResponse
+            {
+                Success = false,
+                Message = "Administrator authentication required."
+            });
+        }
+
         var config = Plugin.Instance?.Configuration;
         if (config is null || !config.Enabled)
         {
