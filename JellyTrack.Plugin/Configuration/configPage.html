@@ -439,6 +439,81 @@
                 });
             }
 
+            function postPluginJson(url, payload) {
+                var body = JSON.stringify(payload || {});
+
+                if (window.ApiClient && typeof ApiClient.ajax === 'function') {
+                    return ApiClient.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: body,
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json'
+                    }).then(function (data, textStatus, xhr) {
+                        return {
+                            ok: true,
+                            status: (xhr && xhr.status) || 200,
+                            data: data || null
+                        };
+                    }, function (err) {
+                        var parsed = null;
+                        var status = (err && (err.status || err.statusCode)) ? (err.status || err.statusCode) : 0;
+
+                        if (err && err.responseJSON) {
+                            parsed = err.responseJSON;
+                        } else if (err && typeof err.responseText === 'string' && err.responseText) {
+                            try {
+                                parsed = JSON.parse(err.responseText);
+                            } catch (parseErr) {
+                                parsed = { message: err.responseText };
+                            }
+                        }
+
+                        return {
+                            ok: false,
+                            status: status,
+                            data: parsed
+                        };
+                    });
+                }
+
+                return fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: body
+                }).then(async function (response) {
+                    var data = null;
+                    var text = '';
+
+                    try {
+                        data = await response.json();
+                    } catch (jsonErr) {
+                        try {
+                            text = await response.text();
+                        } catch (readErr) {
+                            text = '';
+                        }
+                    }
+
+                    if (!data && text) {
+                        data = { message: text };
+                    }
+
+                    return {
+                        ok: response.ok,
+                        status: response.status,
+                        data: data
+                    };
+                }).catch(function (err) {
+                    return {
+                        ok: false,
+                        status: 0,
+                        data: { message: err && err.message ? err.message : String(err) }
+                    };
+                });
+            }
+
             var JellyTrackConfig = { pluginUniqueId: 'e5a2f2ed-7c2a-4a9f-b1d3-5e6f7a8b9c0d' };
 
             document.querySelector('#jellytrackConfigPage').addEventListener('pageshow', function () {
@@ -494,15 +569,10 @@
 
                 var requestUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function') ? ApiClient.getUrl('JellyTrack/Test') : '/JellyTrack/Test';
 
-                fetch(requestUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url, apiKey: apiKey })
-                }).then(async function (response) {
-                    var data = null;
-                    try { data = await response.json(); } catch (err) { data = null; }
+                postPluginJson(requestUrl, { url: url, apiKey: apiKey }).then(function (result) {
+                    var data = result && result.data ? result.data : null;
 
-                    if (response.ok) {
+                    if (result && result.ok) {
                         if (data && data.endpoint) {
                             resultEl.textContent = translate('config.test.connection.success', { endpoint: data.endpoint });
                         } else {
@@ -510,7 +580,7 @@
                         }
                         resultEl.style.color = 'green';
                     } else {
-                        var message = data && data.message ? data.message : ('HTTP ' + response.status);
+                        var message = (data && (data.message || data.error)) ? (data.message || data.error) : ('HTTP ' + (result && result.status ? result.status : 0));
                         resultEl.textContent = translate('config.test.connection.error', { message: message });
                         resultEl.style.color = 'red';
                     }
@@ -540,7 +610,7 @@
 
                     ApiClient.updatePluginConfiguration(JellyTrackConfig.pluginUniqueId, config).then(function () {
                         var heartbeatUrl = (window.ApiClient && typeof ApiClient.getUrl === 'function') ? ApiClient.getUrl('JellyTrack/HeartbeatNow') : '/JellyTrack/HeartbeatNow';
-                        return fetch(heartbeatUrl, { method: 'POST' }).catch(function () { return null; }).finally(function () { Dashboard.processPluginConfigurationUpdateResult(); });
+                        return postPluginJson(heartbeatUrl, {}).finally(function () { Dashboard.processPluginConfigurationUpdateResult(); });
                     });
                 });
 
