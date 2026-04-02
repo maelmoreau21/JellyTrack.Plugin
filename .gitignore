@@ -1,0 +1,36 @@
+# Build artifacts
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Visual Studio / Rider / VSCode
+.vs/
+.idea/
+.vscode/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.userprefs
+
+# NuGet packages
+*.nupkg
+
+# Logs
+*.log
+
+# Publish output
+publish/
+
+# Local env
+.env*
+
+# Python/Node artifacts sometimes present in repo
+node_modules/
+.next/
+dist/
+
+#! Assure the instructions file is committed
+!.claude/rules/instructions.md
