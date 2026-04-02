@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 namespace JellyTrack.Plugin.Api;
 
@@ -60,6 +61,90 @@ public class JellyTrackController : ControllerBase
         return false;
     }
 
+    private static bool TryGetBooleanProperty(object? source, string propertyName, out bool value)
+    {
+        value = false;
+        if (source is null)
+        {
+            return false;
+        }
+
+        var prop = source.GetType().GetProperty(propertyName);
+        if (prop?.GetValue(source) is bool boolValue)
+        {
+            value = boolValue;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string? TryGetStringProperty(object? source, string propertyName)
+    {
+        if (source is null)
+        {
+            return null;
+        }
+
+        var prop = source.GetType().GetProperty(propertyName);
+        var value = prop?.GetValue(source);
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value.ToString();
+    }
+
+    private object? ResolveUserByIdFromAuthorization(object authInfo)
+    {
+        var userIdRaw = TryGetStringProperty(authInfo, "UserId");
+        if (string.IsNullOrWhiteSpace(userIdRaw))
+        {
+            return null;
+        }
+
+        var getUserByIdMethods = _userManager
+            .GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Where(m => string.Equals(m.Name, "GetUserById", StringComparison.Ordinal) && m.GetParameters().Length == 1)
+            .ToArray();
+
+        foreach (var method in getUserByIdMethods)
+        {
+            var parameterType = method.GetParameters()[0].ParameterType;
+            object? argument = null;
+
+            if (parameterType == typeof(Guid))
+            {
+                if (!Guid.TryParse(userIdRaw, out var userGuid))
+                {
+                    continue;
+                }
+                argument = userGuid;
+            }
+            else if (parameterType == typeof(string))
+            {
+                argument = userIdRaw;
+            }
+            else
+            {
+                continue;
+            }
+
+            try
+            {
+                return method.Invoke(_userManager, new[] { argument });
+            }
+            catch
+            {
+                // Try next overload when available.
+            }
+        }
+
+        return null;
+    }
+
     private async Task<bool> IsAuthorizedAdminRequestAsync(CancellationToken cancellationToken)
     {
         var auth = await _authorizationContext.GetAuthorizationInfo(Request).ConfigureAwait(false);
@@ -73,7 +158,30 @@ public class JellyTrackController : ControllerBase
             return false;
         }
 
-        return IsAdminUserObject(auth.User);
+        if (IsAdminUserObject(auth.User))
+        {
+            return true;
+        }
+
+        if (TryGetBooleanProperty(auth, "IsAdministrator", out var isAdmin) && isAdmin)
+        {
+            return true;
+        }
+
+        var userPolicy = auth.GetType().GetProperty("UserPolicy")?.GetValue(auth);
+        if (TryGetBooleanProperty(userPolicy, "IsAdministrator", out isAdmin) && isAdmin)
+        {
+            return true;
+        }
+
+        var resolvedUser = ResolveUserByIdFromAuthorization(auth);
+        if (IsAdminUserObject(resolvedUser))
+        {
+            return true;
+        }
+
+        _logger.LogWarning("Authenticated request rejected on admin endpoint because admin flag could not be resolved.");
+        return false;
     }
 
     [HttpGet("Localization/{lang}")]

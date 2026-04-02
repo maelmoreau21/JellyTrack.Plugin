@@ -441,6 +441,17 @@
 
             function postPluginJson(url, payload) {
                 var body = JSON.stringify(payload || {});
+                var token = null;
+
+                if (window.ApiClient) {
+                    if (typeof ApiClient.accessToken === 'function') {
+                        token = ApiClient.accessToken();
+                    } else if (ApiClient._serverInfo && ApiClient._serverInfo.AccessToken) {
+                        token = ApiClient._serverInfo.AccessToken;
+                    } else if (ApiClient._currentUser && ApiClient._currentUser.AccessToken) {
+                        token = ApiClient._currentUser.AccessToken;
+                    }
+                }
 
                 if (window.ApiClient && typeof ApiClient.ajax === 'function') {
                     return ApiClient.ajax({
@@ -479,7 +490,11 @@
 
                 return fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Emby-Token': token || '',
+                        'X-MediaBrowser-Token': token || ''
+                    },
                     credentials: 'same-origin',
                     body: body
                 }).then(async function (response) {
@@ -580,7 +595,11 @@
                         }
                         resultEl.style.color = 'green';
                     } else {
-                        var message = (data && (data.message || data.error)) ? (data.message || data.error) : ('HTTP ' + (result && result.status ? result.status : 0));
+                        var message = (
+                            data && (data.message || data.Message || data.error || data.Error)
+                        ) ? (
+                            data.message || data.Message || data.error || data.Error
+                        ) : ('HTTP ' + (result && result.status ? result.status : 0));
                         resultEl.textContent = translate('config.test.connection.error', { message: message });
                         resultEl.style.color = 'red';
                     }
