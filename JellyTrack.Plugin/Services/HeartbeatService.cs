@@ -124,6 +124,7 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
             var pluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 
             var users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger);
+            var runtimeMetrics = _apiClient.GetRuntimeMetricsSnapshot();
 
             var payload = new HeartbeatEvent
             {
@@ -133,7 +134,13 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
                 Users = users,
                 ServerLanguage = !string.IsNullOrWhiteSpace(config.PreferredLanguage)
                     ? config.PreferredLanguage
-                    : CultureInfo.CurrentUICulture.Name
+                    : CultureInfo.CurrentUICulture.Name,
+                PluginMetrics = new HeartbeatPluginMetrics
+                {
+                    QueueDepth = runtimeMetrics.QueueDepth,
+                    Retries = runtimeMetrics.RetryAttempts,
+                    LastHttpCode = runtimeMetrics.LastHttpCode,
+                },
             };
 
             var success = await _apiClient.SendEventAsync(payload, cancellationToken).ConfigureAwait(false);

@@ -21,6 +21,21 @@ public sealed class HeartbeatEvent : PluginEvent
 
     [JsonPropertyName("serverLanguage")]
     public string? ServerLanguage { get; set; }
+
+    [JsonPropertyName("pluginMetrics")]
+    public HeartbeatPluginMetrics? PluginMetrics { get; set; }
+}
+
+public sealed class HeartbeatPluginMetrics
+{
+    [JsonPropertyName("queueDepth")]
+    public int QueueDepth { get; set; }
+
+    [JsonPropertyName("retries")]
+    public int Retries { get; set; }
+
+    [JsonPropertyName("lastHttpCode")]
+    public int? LastHttpCode { get; set; }
 }
 
 public sealed class HeartbeatUser

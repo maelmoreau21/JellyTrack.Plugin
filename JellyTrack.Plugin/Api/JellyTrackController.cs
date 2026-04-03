@@ -242,7 +242,8 @@ public class JellyTrackController : ControllerBase
             PluginVersion = Plugin.Instance?.Version.ToString() ?? "0.0.0.0",
             ServerName = _applicationHost.FriendlyName,
             JellyfinVersion = _applicationHost.ApplicationVersionString,
-            Users = new List<HeartbeatUser>()
+            Users = new List<HeartbeatUser>(),
+            PluginMetrics = BuildHeartbeatMetrics()
         };
 
         try 
@@ -334,7 +335,19 @@ public class JellyTrackController : ControllerBase
             PluginVersion = Plugin.Instance?.Version.ToString() ?? "0.0.0.0",
             ServerName = _applicationHost.FriendlyName,
             JellyfinVersion = _applicationHost.ApplicationVersionString,
-            Users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger)
+            Users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger),
+            PluginMetrics = BuildHeartbeatMetrics(),
+        };
+    }
+
+    private HeartbeatPluginMetrics BuildHeartbeatMetrics()
+    {
+        var metrics = _apiClient.GetRuntimeMetricsSnapshot();
+        return new HeartbeatPluginMetrics
+        {
+            QueueDepth = metrics.QueueDepth,
+            Retries = metrics.RetryAttempts,
+            LastHttpCode = metrics.LastHttpCode,
         };
     }
 

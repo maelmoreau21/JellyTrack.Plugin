@@ -9,12 +9,16 @@ using Microsoft.Extensions.Logging;
 namespace JellyTrack.Plugin.Services;
 
 public sealed record TestConnectionResult(bool Success, HttpStatusCode? StatusCode, string Message, string Endpoint);
+public sealed record PluginRuntimeMetricsSnapshot(int QueueDepth, int RetryAttempts, int? LastHttpCode);
 
 public class JellyTrackApiClient : IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<JellyTrackApiClient> _logger;
     private readonly ConcurrentQueue<PluginEvent> _retryQueue = new();
+    private int _retryAttempts;
+    private int? _lastHttpCode;
+    private readonly object _telemetryLock = new();
     private const int MaxQueueSize = 100;
     private const string DefaultPluginEventsPath = "/api/plugin/events";
 
@@ -115,6 +119,20 @@ public class JellyTrackApiClient : IDisposable
         }
     }
 
+    public PluginRuntimeMetricsSnapshot GetRuntimeMetricsSnapshot()
+    {
+        int? lastHttpCode;
+        lock (_telemetryLock)
+        {
+            lastHttpCode = _lastHttpCode;
+        }
+
+        return new PluginRuntimeMetricsSnapshot(
+            QueueDepth: _retryQueue.Count,
+            RetryAttempts: Volatile.Read(ref _retryAttempts),
+            LastHttpCode: lastHttpCode);
+    }
+
     private async Task<bool> SendSingleEventAsync(Uri endpoint, string apiKey, PluginEvent eventPayload, CancellationToken cancellationToken)
     {
         try
@@ -122,6 +140,10 @@ public class JellyTrackApiClient : IDisposable
             using var request = BuildAuthenticatedRequest(endpoint, apiKey, eventPayload);
 
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            lock (_telemetryLock)
+            {
+                _lastHttpCode = (int)response.StatusCode;
+            }
 
             if (response.IsSuccessStatusCode)
             {
@@ -181,9 +203,14 @@ public class JellyTrackApiClient : IDisposable
 
             try
             {
+                Interlocked.Increment(ref _retryAttempts);
                 using var request = BuildAuthenticatedRequest(endpoint, apiKey, queued);
 
                 using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                lock (_telemetryLock)
+                {
+                    _lastHttpCode = (int)response.StatusCode;
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
