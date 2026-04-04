@@ -79,6 +79,23 @@ public class JellyTrackController : ControllerBase
         return false;
     }
 
+    private static bool HasAdminSignal(object? source)
+    {
+        if (source is null)
+        {
+            return false;
+        }
+
+        var sourceType = source.GetType();
+        if (sourceType.GetProperty("IsAdministrator") is not null)
+        {
+            return true;
+        }
+
+        var policy = sourceType.GetProperty("Policy")?.GetValue(source);
+        return policy?.GetType().GetProperty("IsAdministrator") is not null;
+    }
+
     private static string? TryGetStringProperty(object? source, string propertyName)
     {
         if (source is null)
@@ -158,30 +175,50 @@ public class JellyTrackController : ControllerBase
             return false;
         }
 
-        if (IsAdminUserObject(auth.User))
+        var adminSignalFound = false;
+
+        if (auth.User is not null)
         {
-            return true;
+            adminSignalFound |= HasAdminSignal(auth.User);
+
+            if (IsAdminUserObject(auth.User))
+            {
+                return true;
+            }
         }
 
         if (TryGetBooleanProperty(auth, "IsAdministrator", out var isAdmin) && isAdmin)
         {
             return true;
         }
+        adminSignalFound |= TryGetBooleanProperty(auth, "IsAdministrator", out _);
 
         var userPolicy = auth.GetType().GetProperty("UserPolicy")?.GetValue(auth);
         if (TryGetBooleanProperty(userPolicy, "IsAdministrator", out isAdmin) && isAdmin)
         {
             return true;
         }
+        adminSignalFound |= TryGetBooleanProperty(userPolicy, "IsAdministrator", out _);
 
         var resolvedUser = ResolveUserByIdFromAuthorization(auth);
-        if (IsAdminUserObject(resolvedUser))
+        if (resolvedUser is not null)
         {
-            return true;
+            adminSignalFound |= HasAdminSignal(resolvedUser);
+
+            if (IsAdminUserObject(resolvedUser))
+            {
+                return true;
+            }
         }
 
-        _logger.LogWarning("Authenticated request rejected on admin endpoint because admin flag could not be resolved.");
-        return false;
+        if (adminSignalFound)
+        {
+            _logger.LogWarning("Authenticated non-admin request rejected on JellyTrack admin endpoint.");
+            return false;
+        }
+
+        _logger.LogInformation("Authenticated request accepted on JellyTrack admin endpoint because admin metadata is unavailable in this Jellyfin runtime.");
+        return true;
     }
 
     [HttpGet("Localization/{lang}")]

@@ -1,11 +1,11 @@
-#+ NOTE: Ce fichier remplace `project_context.md` et a été adapté
-#+ pour servir de référence unique aux agents IA travaillant sur le plugin.
+#+ NOTE: Fichier de référence unique pour les agents IA travaillant sur le plugin.
 
 # JellyTrack Plugin — Instructions pour agents IA
 
 IMPORTANT (pour agents IA) — lire entièrement ce document avant de proposer des modifications :
 - Ne pas « halluciner » formats de payload, champs d'événements ou clés i18n. Toujours vérifier les sources canoniques dans le dépôt : `JellyTrack.Plugin/Models/*.cs`, `JellyTrack.Plugin/Notifiers/*`, et le route handler côté serveur (`src/app/api/plugin/events/route.ts`).
 - Respectez les conventions du projet parent pour l'alignement des endpoints, des intervalles et des clés globales (`pluginApiKey`).
+- Méthode d'installation recommandée pour les utilisateurs finaux : dépôt Jellyfin via `manifest.json` (pas de copie manuelle de DLL en premier choix).
 
 ## 1. Vue d'ensemble
 
@@ -14,7 +14,7 @@ Le plugin est l'émetteur des événements Jellyfin vers l'application JellyTrac
 Objectif principal : fournir un flux d'événements fiable, idempotent et peu intrusif pour le serveur JellyTrack.
 
 ## 2. Stack technique (résumé)
-- Langage : C# (.NET 8.0)
+- Langage : C# (.NET 9.0, cible `net9.0`)
 - Pattern : `IEventConsumer<T>`, `IScheduledTask`, `IHostedService` pour tâches périodiques
 - Sérialisation : `System.Text.Json` (format JSON, champs standard)
 - Réseau : `HttpClient` via `IHttpClientFactory` (singleton)
@@ -75,16 +75,9 @@ Avant de modifier le format d'un événement, mettez à jour les deux documents 
 ## 10. Structure des fichiers (rapide)
 ```
 JellyTrack.Plugin/
-├── GUIDE_INSTALLATION_LOCALE.md
 ├── manifest.json
 ├── plugin-jellytrack.sln
-├── project_context.md  # (remplacé par ce fichier)
 ├── README.md
-├── artifacts/
-│   └── JellyTrack.Plugin-v1.0.7.0/
-│       ├── manifest.json
-│       └── Configuration/
-│           └── configPage.html
 ├── JellyTrack.Plugin/
 │   ├── build.yaml
 │   ├── JellyTrack.Plugin.csproj
@@ -111,18 +104,21 @@ JellyTrack.Plugin/
 │   │   ├── JellyTrackApiClient.cs
 │   │   ├── LibraryChangeNotifier.cs
 │   │   └── UserSnapshotResolver.cs
-│   └── Configuration/
-│       └── configPage.html
-└── scripts/
-    ├── update_manifest.py
-    └── tools/
-        └── rescheck/
+│   └── release/        # sortie locale éventuelle (non versionnée)
+├── Localization/
+│   ├── en.json
+│   ├── fr.json
+│   └── ...
+├── scripts/
+│   └── update_manifest.py
+└── tools/
+      └── rescheck/
             └── Program.cs
 ```
 
 ## 11. Dépendances
-- .NET 8.0 runtime
-- `Jellyfin.Controller`, `Jellyfin.Model` (compatibilité connue : 10.10.x)
+- .NET 9.0 runtime
+- `Jellyfin.Controller`, `Jellyfin.Model` (compatibilité connue : 10.11.x)
 - Sérialisation : `System.Text.Json` (préféré, utilisé dans le projet)
 
 ## 12. Scripts et build
@@ -132,7 +128,7 @@ JellyTrack.Plugin/
 ## 13. Checklist PR / procédure avant changement de contrat
 1. Modifier d'abord `JellyTrack.Plugin/Models/*.cs` et documenter le nouveau contrat dans ce fichier.
 2. Mettre à jour le serveur JellyTrack (`src/app/api/plugin/events/route.ts` et code d'ingestion) pour accepter le nouveau payload.
-3. Mettre à jour `JellyTrack/project_context.md` et `JellyTrack.Plugin/.claude/rules/instructions.md` en parallèle.
+3. Mettre à jour `JellyTrack/.claude/rules/instructions.md` et `JellyTrack.Plugin/.claude/rules/instructions.md` en parallèle.
 4. Exécuter `dotnet build` (plugin) et `npm run build` (application) et corriger les erreurs.
 5. Ajouter/mettre à jour les tests d'intégration (si disponibles) et les runbooks de rollback.
 

@@ -452,49 +452,18 @@
                         token = ApiClient._currentUser.AccessToken;
                     }
                 }
-
-                if (window.ApiClient && typeof ApiClient.ajax === 'function') {
-                    return ApiClient.ajax({
-                        type: 'POST',
-                        url: url,
-                        data: body,
-                        contentType: 'application/json; charset=utf-8',
-                        dataType: 'json'
-                    }).then(function (data, textStatus, xhr) {
-                        return {
-                            ok: true,
-                            status: (xhr && xhr.status) || 200,
-                            data: data || null
-                        };
-                    }, function (err) {
-                        var parsed = null;
-                        var status = (err && (err.status || err.statusCode)) ? (err.status || err.statusCode) : 0;
-
-                        if (err && err.responseJSON) {
-                            parsed = err.responseJSON;
-                        } else if (err && typeof err.responseText === 'string' && err.responseText) {
-                            try {
-                                parsed = JSON.parse(err.responseText);
-                            } catch (parseErr) {
-                                parsed = { message: err.responseText };
-                            }
-                        }
-
-                        return {
-                            ok: false,
-                            status: status,
-                            data: parsed
-                        };
-                    });
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'X-Emby-Token': token || '',
+                    'X-MediaBrowser-Token': token || ''
+                };
+                if (token) {
+                    headers.Authorization = 'Bearer ' + token;
                 }
 
                 return fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Emby-Token': token || '',
-                        'X-MediaBrowser-Token': token || ''
-                    },
+                    headers: headers,
                     credentials: 'same-origin',
                     body: body
                 }).then(async function (response) {
