@@ -116,11 +116,16 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
             return;
         }
 
+        if (!IsConfigurationReadyForSend(config, out var skipReason))
+        {
+            _logger.LogDebug("Skipping JellyTrack heartbeat ({Source}): {Reason}", source, skipReason);
+            return;
+        }
+
         await _sendLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             LogContainerLocalhostHint(config.JellyTrackUrl);
-
             var pluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 
             var users = UserSnapshotResolver.ResolveHeartbeatUsers(_userManager, _logger);
@@ -162,6 +167,31 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
         {
             _sendLock.Release();
         }
+    }
+
+    private static bool IsConfigurationReadyForSend(PluginConfiguration config, out string reason)
+    {
+        if (string.IsNullOrWhiteSpace(config.JellyTrackUrl))
+        {
+            reason = "JellyTrack URL is empty";
+            return false;
+        }
+
+        var apiKey = config.ApiKey?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            reason = "API key is empty";
+            return false;
+        }
+
+        if (string.Equals(apiKey, "jt_xxxxxxxxxxxx", StringComparison.OrdinalIgnoreCase))
+        {
+            reason = "API key still uses placeholder value";
+            return false;
+        }
+
+        reason = string.Empty;
+        return true;
     }
 
     private int GetHeartbeatIntervalSeconds()

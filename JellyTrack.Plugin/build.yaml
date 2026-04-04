@@ -1,8 +1,8 @@
 name: "JellyTrack"
 guid: "e5a2f2ed-7c2a-4a9f-b1d3-5e6f7a8b9c0d"
-version: "1.0.6.0"
-targetAbi: "10.10.0.0"
-framework: "net8.0"
+version: "1.0.9.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
 owner: "JellyTrack"
 overview: "Plugin Jellyfin pour pousser les événements de lecture vers JellyTrack"
 description: >
@@ -14,6 +14,11 @@ category: "General"
 artifacts:
   - "JellyTrack.Plugin.dll"
 changelog: |
+  ## v1.0.9
+  - Disable plugin by default on fresh installs to avoid outbound calls before configuration
+  - Skip heartbeat sends when URL/API key are missing or still set to placeholder values
+  - Clarify that `Unauthorized` heartbeat logs indicate API key/runtime config issues, not repository installation failures
+
   ## v1.0.6
   - Enrich PlaybackProgress payload with media metadata (title/type/duration)
   - Enrich PlaybackProgress payload with session metadata (IP/client/device/playmethod)

@@ -68,6 +68,7 @@ dotnet build -c Release
 
 - Plugin absent dans le catalogue → vérifier l'URL du manifeste et la connectivité réseau depuis le serveur Jellyfin
 - Aucun événement reçu → vérifier la configuration (URL, clé), les logs Jellyfin et JellyTrack
+- Message `Unauthorized` juste après installation → ce n'est pas un échec d'installation du dépôt. Cela signifie que le plugin essaie d'envoyer un heartbeat avec une clé API invalide/ancienne. Ouvrir la configuration du plugin, corriger URL + clé API, ou désactiver le plugin tant que JellyTrack n'est pas prêt.
 - Si vous utilisez une URL contenant un chemin personnalisé, assurez-vous que l'endpoint côté JellyTrack accepte `/api/plugin/events` ou `/api/webhook/jellyfin` selon votre configuration
 
 ## Licence

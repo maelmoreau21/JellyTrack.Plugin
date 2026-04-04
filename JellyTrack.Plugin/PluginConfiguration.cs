@@ -12,7 +12,9 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public int ProgressIntervalSeconds { get; set; } = 15;
 
-    public bool Enabled { get; set; } = true;
+    // Keep disabled by default so a fresh install does not emit network traffic
+    // before the admin validates URL and API key.
+    public bool Enabled { get; set; } = false;
 
     // Optional: preferred language for the plugin. Leave empty to use Jellyfin's current UI language.
     public string PreferredLanguage { get; set; } = string.Empty;
