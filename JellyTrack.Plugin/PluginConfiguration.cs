@@ -5,12 +5,19 @@ namespace JellyTrack.Plugin;
 public class PluginConfiguration : BasePluginConfiguration
 {
     public const int DefaultHeartbeatIntervalSeconds = 600;
+    public const int MinimumHeartbeatIntervalSeconds = 300;
+
+    private int _heartbeatIntervalSeconds = DefaultHeartbeatIntervalSeconds;
 
     public string JellyTrackUrl { get; set; } = string.Empty;
 
     public string ApiKey { get; set; } = string.Empty;
 
-    public int HeartbeatIntervalSeconds { get; set; } = DefaultHeartbeatIntervalSeconds;
+    public int HeartbeatIntervalSeconds
+    {
+        get => _heartbeatIntervalSeconds;
+        set => _heartbeatIntervalSeconds = NormalizeHeartbeatIntervalSeconds(value);
+    }
 
     public int ProgressIntervalSeconds { get; set; } = 15;
 
@@ -20,4 +27,14 @@ public class PluginConfiguration : BasePluginConfiguration
 
     // Optional: preferred language for the plugin. Leave empty to use Jellyfin's current UI language.
     public string PreferredLanguage { get; set; } = string.Empty;
+
+    public static int NormalizeHeartbeatIntervalSeconds(int configuredValue)
+    {
+        if (configuredValue < MinimumHeartbeatIntervalSeconds)
+        {
+            return DefaultHeartbeatIntervalSeconds;
+        }
+
+        return configuredValue;
+    }
 }

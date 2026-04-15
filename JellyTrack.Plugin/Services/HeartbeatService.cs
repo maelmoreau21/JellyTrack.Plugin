@@ -1,6 +1,7 @@
 using System.Reflection;
 using JellyTrack.Plugin.Models;
 using System.Globalization;
+using System.Linq;
 using JellyTrack.Plugin.Services;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
@@ -12,7 +13,6 @@ namespace JellyTrack.Plugin.Services;
 
 public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
 {
-    private const int MinimumHeartbeatIntervalSeconds = 300;
     private readonly JellyTrackApiClient _apiClient;
     private readonly IUserManager _userManager;
     private readonly IServerApplicationHost _appHost;
@@ -54,6 +54,8 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
         {
             return Task.CompletedTask;
         }
+
+        MigrateLegacyHeartbeatIntervalIfNeeded();
 
         _backgroundCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _backgroundLoop = RunBackgroundLoopAsync(_backgroundCts.Token);
@@ -200,21 +202,99 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
         var configured = Plugin.Instance?.Configuration.HeartbeatIntervalSeconds
             ?? PluginConfiguration.DefaultHeartbeatIntervalSeconds;
 
-        if (configured <= 0)
-        {
-            return PluginConfiguration.DefaultHeartbeatIntervalSeconds;
-        }
-
-        if (configured < MinimumHeartbeatIntervalSeconds)
+        var normalized = PluginConfiguration.NormalizeHeartbeatIntervalSeconds(configured);
+        if (configured != normalized)
         {
             _logger.LogWarning(
-                "Configured heartbeat interval {ConfiguredSeconds}s is too low. Applying minimum interval of {MinimumSeconds}s.",
+                "Configured heartbeat interval {ConfiguredSeconds}s is legacy/invalid. Forcing default interval of {DefaultSeconds}s.",
                 configured,
-                MinimumHeartbeatIntervalSeconds);
-            return MinimumHeartbeatIntervalSeconds;
+                PluginConfiguration.DefaultHeartbeatIntervalSeconds);
         }
 
-        return configured;
+        return normalized;
+    }
+
+    private void MigrateLegacyHeartbeatIntervalIfNeeded()
+    {
+        var plugin = Plugin.Instance;
+        var config = plugin?.Configuration;
+        if (plugin is null || config is null)
+        {
+            return;
+        }
+
+        var configured = config.HeartbeatIntervalSeconds;
+        var normalized = PluginConfiguration.NormalizeHeartbeatIntervalSeconds(configured);
+        if (configured == normalized)
+        {
+            return;
+        }
+
+        config.HeartbeatIntervalSeconds = normalized;
+        _logger.LogWarning(
+            "Migrating legacy heartbeat interval from {ConfiguredSeconds}s to {DefaultSeconds}s.",
+            configured,
+            normalized);
+
+        TryPersistConfigurationMigration(plugin, config);
+    }
+
+    private void TryPersistConfigurationMigration(Plugin plugin, PluginConfiguration config)
+    {
+        const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        try
+        {
+            var updateMethod = plugin
+                .GetType()
+                .GetMethods(Flags)
+                .FirstOrDefault(method =>
+                {
+                    if (!string.Equals(method.Name, "UpdateConfiguration", StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+
+                    var parameters = method.GetParameters();
+                    return parameters.Length == 1 &&
+                           parameters[0].ParameterType.IsAssignableFrom(typeof(PluginConfiguration));
+                });
+
+            if (updateMethod is not null)
+            {
+                updateMethod.Invoke(plugin, new object[] { config });
+                _logger.LogInformation(
+                    "Persisted migrated heartbeat interval: {DefaultSeconds}s.",
+                    config.HeartbeatIntervalSeconds);
+                return;
+            }
+
+            var saveMethod = plugin
+                .GetType()
+                .GetMethods(Flags)
+                .FirstOrDefault(method =>
+                    string.Equals(method.Name, "SaveConfiguration", StringComparison.Ordinal) &&
+                    method.GetParameters().Length == 0);
+
+            if (saveMethod is not null)
+            {
+                saveMethod.Invoke(plugin, null);
+                _logger.LogInformation(
+                    "Persisted migrated heartbeat interval: {DefaultSeconds}s.",
+                    config.HeartbeatIntervalSeconds);
+                return;
+            }
+
+            _logger.LogWarning(
+                "Heartbeat interval migration applied in memory ({DefaultSeconds}s), but no persistence method was found.",
+                config.HeartbeatIntervalSeconds);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Heartbeat interval migration applied in memory but persistence failed.");
+        }
     }
 
     private void LogContainerLocalhostHint(string? configuredUrl)
