@@ -12,6 +12,7 @@ namespace JellyTrack.Plugin.Services;
 
 public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
 {
+    private const int MinimumHeartbeatIntervalSeconds = 300;
     private readonly JellyTrackApiClient _apiClient;
     private readonly IUserManager _userManager;
     private readonly IServerApplicationHost _appHost;
@@ -196,8 +197,24 @@ public class HeartbeatService : IScheduledTask, IHostedService, IDisposable
 
     private int GetHeartbeatIntervalSeconds()
     {
-        var configured = Plugin.Instance?.Configuration.HeartbeatIntervalSeconds ?? 60;
-        return configured > 0 ? configured : 60;
+        var configured = Plugin.Instance?.Configuration.HeartbeatIntervalSeconds
+            ?? PluginConfiguration.DefaultHeartbeatIntervalSeconds;
+
+        if (configured <= 0)
+        {
+            return PluginConfiguration.DefaultHeartbeatIntervalSeconds;
+        }
+
+        if (configured < MinimumHeartbeatIntervalSeconds)
+        {
+            _logger.LogWarning(
+                "Configured heartbeat interval {ConfiguredSeconds}s is too low. Applying minimum interval of {MinimumSeconds}s.",
+                configured,
+                MinimumHeartbeatIntervalSeconds);
+            return MinimumHeartbeatIntervalSeconds;
+        }
+
+        return configured;
     }
 
     private void LogContainerLocalhostHint(string? configuredUrl)

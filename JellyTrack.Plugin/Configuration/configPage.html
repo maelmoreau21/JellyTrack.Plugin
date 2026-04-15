@@ -441,6 +441,42 @@
 
             function postPluginJson(url, payload) {
                 var body = JSON.stringify(payload || {});
+
+                if (window.ApiClient && typeof ApiClient.ajax === 'function') {
+                    return ApiClient.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: body,
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).then(function (data) {
+                        return {
+                            ok: true,
+                            status: 200,
+                            data: data || {}
+                        };
+                    }).catch(function (err) {
+                        var responseData = null;
+                        if (err && err.responseJSON) {
+                            responseData = err.responseJSON;
+                        } else if (err && typeof err.responseText === 'string' && err.responseText) {
+                            try {
+                                responseData = JSON.parse(err.responseText);
+                            } catch (_) {
+                                responseData = { message: err.responseText };
+                            }
+                        }
+
+                        return {
+                            ok: false,
+                            status: (err && typeof err.status === 'number') ? err.status : 0,
+                            data: responseData || {
+                                message: (err && err.message) ? err.message : 'Request failed'
+                            }
+                        };
+                    });
+                }
+
                 var token = null;
 
                 if (window.ApiClient) {
@@ -457,6 +493,9 @@
                     'X-Emby-Token': token || '',
                     'X-MediaBrowser-Token': token || ''
                 };
+                if (window.ApiClient && typeof ApiClient.getAuthorizationHeader === 'function') {
+                    headers['X-Emby-Authorization'] = ApiClient.getAuthorizationHeader();
+                }
                 if (token) {
                     headers.Authorization = 'Bearer ' + token;
                 }

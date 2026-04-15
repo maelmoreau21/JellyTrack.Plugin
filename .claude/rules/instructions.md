@@ -1,150 +1,149 @@
-#+ NOTE: Fichier de référence unique pour les agents IA travaillant sur le plugin.
+#+ NOTE: Fichier de reference unique pour les agents IA travaillant sur le plugin.
 
-# JellyTrack Plugin — Instructions pour agents IA
+# JellyTrack Plugin - Instructions pour agents IA (v1.4.0)
 
-IMPORTANT (pour agents IA) — lire entièrement ce document avant de proposer des modifications :
-- Ne pas « halluciner » formats de payload, champs d'événements ou clés i18n. Toujours vérifier les sources canoniques dans le dépôt : `JellyTrack.Plugin/Models/*.cs`, `JellyTrack.Plugin/Notifiers/*`, et le route handler côté serveur (`src/app/api/plugin/events/route.ts`).
-- Respectez les conventions du projet parent pour l'alignement des endpoints, des intervalles et des clés globales (`pluginApiKey`).
-- Méthode d'installation recommandée pour les utilisateurs finaux : dépôt Jellyfin via `manifest.json` (pas de copie manuelle de DLL en premier choix).
+IMPORTANT (pour agents IA) - lire entierement ce document avant de proposer des modifications.
+
+- Ne pas halluciner formats de payload, champs d'evenements ou cles i18n.
+  - Sources canoniques: `JellyTrack.Plugin/Models/*.cs`, `JellyTrack.Plugin/Notifiers/*`, `JellyTrack.Plugin/Services/*`.
+- Ne pas inventer le contrat serveur.
+  - Source canonique cote app: `JellyTrack/src/app/api/plugin/events/route.ts`.
+- Respecter les conventions endpoint, schema event et plugin key du projet parent.
+- Methode d'installation recommandee pour les utilisateurs finaux: catalogue Jellyfin via `manifest.json`.
+- Ne pas faire de `commit`, `push`, creation de branche ou `merge` sans demande explicite utilisateur.
 
 ## 1. Vue d'ensemble
 
-Le plugin est l'émetteur des événements Jellyfin vers l'application JellyTrack (Next.js + PostgreSQL + Redis). Il capte les événements locaux (playback, progress, heartbeat, library change) et les pousse via HTTP POST vers l'endpoint configuré sur le serveur (par défaut `/api/plugin/events`).
+Le plugin JellyTrack (C#) est l'emetteur d'evenements Jellyfin vers l'application JellyTrack (Next.js).
 
-Objectif principal : fournir un flux d'événements fiable, idempotent et peu intrusif pour le serveur JellyTrack.
+Pipeline principal:
 
-## 2. Stack technique (résumé)
-- Langage : C# (.NET 9.0, cible `net9.0`)
-- Pattern : `IEventConsumer<T>`, `IScheduledTask`, `IHostedService` pour tâches périodiques
-- Sérialisation : `System.Text.Json` (format JSON, champs standard)
-- Réseau : `HttpClient` via `IHttpClientFactory` (singleton)
+1. Capture des evenements locaux (start/progress/stop/library + heartbeat).
+2. Serialisation JSON standard (`System.Text.Json`).
+3. POST HTTP vers l'endpoint configure (par defaut `/api/plugin/events`).
+4. Retry local avec queue memoire limitee.
 
-## 3. Diagramme simplifié
-```
-Jellyfin Server
-  └── JellyTrack Plugin (.dll)
-        ├── Notifiers (PlaybackStart/Stop/Progress)
-        ├── HeartbeatService (périodique)
-        └── LibraryChangeNotifier (debounced)
-              │
-              ▼
-        JellyTrackApiClient (HttpClient)
-              │
-              ▼  POST → /api/plugin/events  (par défaut)
-        JellyTrack Server (Next.js)
-```
+Objectif: flux fiable, idempotent et peu intrusif.
 
-## 4. Événements envoyés (contrat minimal)
-Types d'événements et rôles :
-- `Heartbeat` (default 60s) : état du plugin, version, `serverLanguage`, nom du serveur, liste d'utilisateurs pour synchronisation.
-- `PlaybackStart` : début de session — metadata complète du média + session (sessionId, userId, client, device, ip, playMethod, duration, codecs, etc.).
-- `PlaybackProgress` (default 15s) : position actuelle (`positionMs`), état pause/play, index des pistes audio/sous-titres, flags de changement (audio/subtitle change).
-- `PlaybackStop` : fin de session — position finale, durée totale consommée.
-- `LibraryChanged` : signal d'ajout/modification de médias — envoyé en batch avec debounce (~30s) pour éviter rafales.
+## 2. Stack technique (canonique)
 
-Remarque : les noms exacts et la structure des payloads sont définis par `JellyTrack.Plugin/Models/*.cs` (ex : `PlaybackStartEvent.cs`). Toute modification du contrat doit être coordonnée avec le serveur JellyTrack.
+- Langage: C# (`net9.0`)
+- Pattern: `IEventConsumer<T>`, `IScheduledTask`, `IHostedService`
+- Serialisation: `System.Text.Json`
+- Reseau: `HttpClient` via `IHttpClientFactory`
+- API Jellyfin: `Jellyfin.Controller` + `Jellyfin.Model` (10.11.x)
 
-## 5. Sécurité & Auth
-- Authentification : header `Authorization: Bearer {apiKey}` (clé stockée côté serveur dans `global_settings.pluginApiKey`).
-- Timeout HTTP : typiquement 5s par requête pour ne pas bloquer Jellyfin.
-- Le plugin ne doit jamais stocker les secrets en clair en dehors de la configuration Jellyfin.
+## 3. Contrat de Compatibilite avec JellyTrack App
 
-## 6. Robustesse & résilience
-- Queue mémoire (taille configurable, ex. max 100 évènements) pour buffer des envois.
-- Retry backoff local sur échecs réseau ; en cas d'échec soutenu, retention minimale puis purge pour éviter usage mémoire illimité.
-- Debounce/batching pour `LibraryChanged`.
+Source de reference serveur: `JellyTrack/src/app/api/plugin/events/route.ts`
 
-## 7. Mapping côté serveur (rappel opérationnel)
-Le serveur JellyTrack attend ces comportements côté plugin :
-- Vérification d'API key : le serveur compare `Authorization` à `global_settings.pluginApiKey`.
-- Upserts canonical : `upsertCanonicalUser` et `upsertCanonicalMedia` sont déclenchés à la réception de `PlaybackStart` / `LibraryChanged`.
-- `PlaybackStart` crée ou réouvre une `playback_history` (si fenêtre de merge trouvée), `PlaybackProgress` écrit des `telemetry_event` (batch via `createMany`), `PlaybackStop` finalise `duration_watched`.
-- Active stream snapshot : le plugin peut être source d'un `stream:<sessionId>` en Redis (TTL court) si configuré.
+### 3.1 Types d'evenements acceptes
 
-Avant de modifier le format d'un événement, mettez à jour les deux documents et le code serveur.
+- `Heartbeat`
+- `PlaybackStart`
+- `PlaybackProgress`
+- `PlaybackStop`
+- `LibraryChanged`
 
-## 8. Internationalisation
-- Le plugin envoie `serverLanguage` dans `Heartbeat` (format ISO court, ex. `en`, `fr`, `pt-BR`).
-- Si le plugin propose une option `PreferredLanguage`, le champ est utilisé à la place de la langue du serveur.
+### 3.2 Version de schema obligatoire
 
-## 9. Configuration & options
-- URL de destination (endpoint) — configurable dans la page admin du plugin (ex: `/api/plugin/events`).
-- API key — `pluginApiKey` côté serveur : obligatoire si activé.
-- Intervalles : heartbeat (par défaut 60s), playback progress (15s), debounce library (≈30s). Ces valeurs sont configurables.
+- `eventSchemaVersion` doit etre present sur tous les payloads.
+- Version supportee cote serveur v1.4.0: `2` (strict).
+- Source plugin: `JellyTrack.Plugin/Models/PluginEvent.cs`.
 
-## 10. Structure des fichiers (rapide)
-```
-JellyTrack.Plugin/
-├── manifest.json
-├── plugin-jellytrack.sln
-├── README.md
-├── JellyTrack.Plugin/
-│   ├── build.yaml
-│   ├── JellyTrack.Plugin.csproj
-│   ├── Plugin.cs
-│   ├── PluginConfiguration.cs
-│   ├── PluginServiceRegistrator.cs
-│   ├── Api/
-│   │   └── JellyTrackController.cs
-│   ├── Configuration/
-│   │   └── configPage.html
-│   ├── Models/
-│   │   ├── HeartbeatEvent.cs
-│   │   ├── LibraryChangedEvent.cs
-│   │   ├── PlaybackProgressEvent.cs
-│   │   ├── PlaybackStartEvent.cs
-│   │   ├── PlaybackStopEvent.cs
-│   │   └── PluginEvent.cs
-│   ├── Notifiers/
-│   │   ├── PlaybackProgressNotifier.cs
-│   │   ├── PlaybackStartNotifier.cs
-│   │   └── PlaybackStopNotifier.cs
-│   ├── Services/
-│   │   ├── HeartbeatService.cs
-│   │   ├── JellyTrackApiClient.cs
-│   │   ├── LibraryChangeNotifier.cs
-│   │   └── UserSnapshotResolver.cs
-│   └── release/        # sortie locale éventuelle (non versionnée)
-├── Localization/
-│   ├── en.json
-│   ├── fr.json
-│   └── ...
-├── scripts/
-│   └── update_manifest.py
-└── tools/
-      └── rescheck/
-            └── Program.cs
-```
+### 3.3 Auth plugin key (hash-at-rest cote app)
 
-## 11. Dépendances
-- .NET 9.0 runtime
-- `Jellyfin.Controller`, `Jellyfin.Model` (compatibilité connue : 10.11.x)
-- Sérialisation : `System.Text.Json` (préféré, utilisé dans le projet)
+- Le plugin envoie la cle brute (jamais hash) uniquement en transport HTTP.
+- Headers supportes et recommandes:
+  - `Authorization: Bearer <pluginKey>`
+  - `X-Api-Key: <pluginKey>`
+- Source plugin: `JellyTrack.Plugin/Services/JellyTrackApiClient.cs`.
+- Cote serveur, la cle est comparee au hash scrypt stocke (`pluginApiKey`) via timing-safe compare.
 
-## 12. Scripts et build
-- Build plugin : exécuter `dotnet build` dans le dossier `JellyTrack.Plugin` (ou `JellyTrack.Plugin/JellyTrack.Plugin` selon layout).
-- Scripts utiles : `scripts/update_manifest.py` pour générer/mettre à jour le manifeste d'artifacts.
+Important:
+- Ne jamais tenter de reproduire le hash scrypt dans le plugin.
+- Ne jamais stocker la cle dans d'autres fichiers que la config plugin Jellyfin.
 
-## 13. Checklist PR / procédure avant changement de contrat
-1. Modifier d'abord `JellyTrack.Plugin/Models/*.cs` et documenter le nouveau contrat dans ce fichier.
-2. Mettre à jour le serveur JellyTrack (`src/app/api/plugin/events/route.ts` et code d'ingestion) pour accepter le nouveau payload.
-3. Mettre à jour `JellyTrack/.claude/rules/instructions.md` et `JellyTrack.Plugin/.claude/rules/instructions.md` en parallèle.
-4. Exécuter `dotnet build` (plugin) et `npm run build` (application) et corriger les erreurs.
-5. Ajouter/mettre à jour les tests d'intégration (si disponibles) et les runbooks de rollback.
+### 3.4 Cles scopees multi-serveur
 
-## 14. Vérifications de cohérence (rappel)
-- Endpoint d'ingestion : `/api/plugin/events` — vérifier côté app et plugin.
-- Méthode d'authentification : `Authorization: Bearer {apiKey}` et `global_settings.pluginApiKey` côté serveur.
-- Intervalles par défaut : Heartbeat 60s, Progress 15s — vérifier configuration si modifiée.
+- Format possible fourni par l'app: `jts3.<serverIdBase64url>.<rawKey>`.
+- Le plugin doit transmettre ce token tel quel sans le parser/casser.
+- Le serveur extrait la partie scopee et verifie la coherence avec le `serverId` du payload.
 
-## 15. Notes pour agents IA
-- Toujours vérifier les fichiers modèles côté plugin (`JellyTrack.Plugin/Models/*.cs`) et le route handler côté serveur (`src/app/api/plugin/events/route.ts`) avant de proposer des modifications au contrat.
-- Ne pas modifier seul le format d'un événement : prévenez et coordonnez les changements sur les deux dépôts.
-- Avant d'ajouter un champ numérique de grande taille (ex: `positionMs`), vérifiez si le serveur attend un string pour BigInt et adaptez la sérialisation si nécessaire.
+## 4. Politique Heartbeat (Performance reseau)
+
+Source: `JellyTrack.Plugin/Services/HeartbeatService.cs` + `JellyTrack.Plugin/PluginConfiguration.cs`
+
+- Premier heartbeat envoye immediatement au demarrage (signal de presence rapide).
+- Intervalle par defaut: `600` secondes (10 minutes).
+- Intervalle minimum applique: `300` secondes (5 minutes).
+- Si config invalide/<=0: fallback automatique sur le defaut 600s.
+
+Objectif:
+- reduire fortement le bruit reseau tout en gardant un signal de sante periodique.
+
+## 5. Robustesse & Resilience
+
+Source: `JellyTrack.Plugin/Services/JellyTrackApiClient.cs`
+
+- Timeout HTTP court (5s) pour eviter de bloquer le serveur Jellyfin.
+- Queue memoire de retry bornee (`MaxQueueSize = 100`).
+- Flush de queue avant envoi du nouvel evenement.
+- En echec reseau/API: requeue et retry progressif lors des envois suivants.
+
+## 6. Structure de travail (vue utile)
+
+- `JellyTrack.Plugin/Plugin.cs`: definition plugin + page config
+- `JellyTrack.Plugin/PluginConfiguration.cs`: options persistantes
+- `JellyTrack.Plugin/PluginServiceRegistrator.cs`: DI/registre services
+- `JellyTrack.Plugin/Api/JellyTrackController.cs`: endpoints admin plugin
+- `JellyTrack.Plugin/Configuration/configPage.html`: UI de configuration
+- `JellyTrack.Plugin/Models/*.cs`: contrat evenementiel
+- `JellyTrack.Plugin/Notifiers/*.cs`: capteurs playback
+- `JellyTrack.Plugin/Services/JellyTrackApiClient.cs`: client HTTP vers app
+- `JellyTrack.Plugin/Services/HeartbeatService.cs`: heartbeat periodique
+- `JellyTrack.Plugin/Services/LibraryChangeNotifier.cs`: debounce/batch bibliotheque
+
+## 7. Internationalisation plugin
+
+- Fichiers: `Localization/*.json`.
+- La page `configPage.html` charge les traductions via endpoint plugin.
+- Toute nouvelle cle UI doit etre ajoutee dans toutes les locales plugin.
+
+## 8. Regles Qualite Zero Dette Technique
+
+Avant finalisation:
+
+1. Verifier compatibilite contrat avec `JellyTrack/src/app/api/plugin/events/route.ts`.
+2. Verifier `eventSchemaVersion` sur tout nouvel evenement.
+3. Verifier que les headers auth restent compatibles (`Authorization` + `X-Api-Key`).
+4. Executer `dotnet build` dans `JellyTrack.Plugin/JellyTrack.Plugin`.
+5. Si contrat modifie: mettre a jour en parallele
+   - `JellyTrack/.claude/rules/instructions.md`
+   - `JellyTrack.Plugin/.claude/rules/instructions.md`
+6. Verifier qu'aucun secret reel n'est ajoute au repo (manifest/config/doc).
+
+## 9. Commandes de Reference
+
+- Build plugin: `dotnet build JellyTrack.Plugin/JellyTrack.Plugin/JellyTrack.Plugin.csproj`
+- Build solution: `dotnet build JellyTrack.Plugin/plugin-jellytrack.sln`
+- Mise a jour manifeste: `python scripts/update_manifest.py`
+
+## 10. Checklist Anti-Hallucination
+
+Toujours verifier avant proposition:
+
+- `JellyTrack.Plugin/Models/*.cs`
+- `JellyTrack.Plugin/Services/JellyTrackApiClient.cs`
+- `JellyTrack.Plugin/Services/HeartbeatService.cs`
+- `JellyTrack.Plugin/Configuration/configPage.html`
+- `JellyTrack/src/app/api/plugin/events/route.ts`
+- `JellyTrack/src/lib/pluginKeyManager.ts`
+- `JellyTrack/src/lib/pluginServerKey.ts`
+
+Si un doute persiste: lire le fichier, ne pas deviner.
 
 ---
 
-Si besoin, je peux :
-- générer un exemple de payload `PlaybackProgress` conforme,
-- exécuter un `dotnet build` pour vérifier l'absence d'erreurs de compilation,
-- ou committer ces modifications.
+Ce document est la reference agents IA pour JellyTrack Plugin v1.4.0.
+Toute evolution du contrat (payload, auth, schema version) doit mettre a jour ce document dans la meme PR.

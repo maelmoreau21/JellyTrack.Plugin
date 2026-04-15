@@ -4,11 +4,13 @@ namespace JellyTrack.Plugin;
 
 public class PluginConfiguration : BasePluginConfiguration
 {
+    public const int DefaultHeartbeatIntervalSeconds = 600;
+
     public string JellyTrackUrl { get; set; } = string.Empty;
 
     public string ApiKey { get; set; } = string.Empty;
 
-    public int HeartbeatIntervalSeconds { get; set; } = 60;
+    public int HeartbeatIntervalSeconds { get; set; } = DefaultHeartbeatIntervalSeconds;
 
     public int ProgressIntervalSeconds { get; set; } = 15;
 
