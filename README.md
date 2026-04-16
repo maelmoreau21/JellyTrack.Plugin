@@ -42,7 +42,7 @@ Dans Jellyfin → Tableau de bord → Plugins → JellyTrack :
 
 - **URL JellyTrack** : ex. `http://192.168.1.100:3000` (si vous entrez uniquement l'hôte, le plugin poste sur `/api/plugin/events`)
 - **Clé API** : `jt_xxxxxxxxxxxx` (depuis JellyTrack)
-- **Intervalle Heartbeat (s)** : 60 (par défaut)
+- **Intervalle Heartbeat (s)** : 600 (par défaut, minimum 300)
 - **Intervalle Progress (s)** : 15 (par défaut)
 - **Activer / Désactiver** : bascule globale
 
@@ -79,3 +79,8 @@ MIT
 
 - Le plugin détecte par défaut la langue d'interface du serveur Jellyfin et l'envoie dans le `Heartbeat` vers JellyTrack. Cela permet à JellyTrack d'utiliser par défaut la même langue que votre serveur Jellyfin.
 - Vous pouvez surcharger ce comportement dans la configuration du plugin (option **Langue préférée**) : laissez vide pour utiliser la langue de Jellyfin, ou renseignez un code de langue ISO (ex: `en`, `fr`, `pt-BR`).
+
+## Dépôts liés
+
+- Application JellyTrack : https://github.com/maelmoreau21/JellyTrack
+- Plugin JellyTrack pour Jellyfin : https://github.com/maelmoreau21/JellyTrack.Plugin
