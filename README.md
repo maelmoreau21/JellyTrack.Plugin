@@ -1,88 +1,68 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/maelmoreau21/JellyTrack/main/public/logo.svg" width="128" height="128" alt="JellyTrack Logo">
+</p>
 
-![JellyTrack Plugin Banner](assets/banner.png)
+<h1 align="center">JellyTrack Plugin</h1>
 
-# JellyTrack Plugin pour Jellyfin
+<p align="center">
+  <img src="https://img.shields.io/github/v/release/maelmoreau21/JellyTrack.Plugin" alt="GitHub Release">
+  <img src="https://img.shields.io/github/license/maelmoreau21/JellyTrack.Plugin" alt="License">
+</p>
 
-Plugin pour Jellyfin qui envoie les événements de lecture et les métadonnées vers **JellyTrack** pour l'analyse et les statistiques.
+<p align="center">
+  <strong>Plugin Jellyfin pour JellyTrack : capture et envoie les événements de lecture et métadonnées en temps réel vers votre serveur d'analytics.</strong>
+</p>
 
-## Important — dépendance au serveur JellyTrack
+---
 
-- Le plugin envoie les événements vers une instance JellyTrack : assurez-vous d'avoir une instance JellyTrack accessible (URL + clé API) avant d'activer le plugin. Sans serveur JellyTrack, le plugin n'enverra pas d'événements et n'aura pas d'effet visible.
-- **Installation recommandée** : via le dépôt Jellyfin (voir ci‑dessous). Configurez l'URL JellyTrack dans la page de configuration du plugin et testez la connexion avant de laisser le plugin en production.
+> [!IMPORTANT]
+> ### 🚨 SERVEUR JELLYTRACK REQUIS
+> Ce plugin ne fonctionne que s'il est connecté à une instance active de **JellyTrack**. Sans serveur, le plugin n'aura aucun effet visible.
+> 
+> [👉 Déployer le serveur JellyTrack](https://github.com/maelmoreau21/JellyTrack)
 
-## Installation (RECOMMANDÉE : dépôt Jellyfin)
+---
 
-Privilégiez l'installation via le dépôt de plugins Jellyfin — c'est la méthode la plus simple et la plus sûre pour maintenir le plugin à jour.
+## 🔌 Installation (Méthode Recommandée : Dépôt Jellyfin)
 
-1. Dans Jellyfin → Tableau de bord → Plugins → Dépôts
-2. Cliquer sur `+` (Ajouter)
-3. Remplir :
-   - **Nom** : JellyTrack
+Privilégiez l'installation via le dépôt officiel pour bénéficier des mises à jour automatiques directement depuis votre interface Jellyfin.
+
+### 1. Ajouter le dépôt
+1. Dans Jellyfin : **Tableau de bord** > **Plugins** > **Dépôts**.
+2. Cliquez sur le bouton `+` (Ajouter).
+3. Remplissez les informations suivantes :
+   - **Nom** : `JellyTrack`
    - **URL** : `https://raw.githubusercontent.com/maelmoreau21/JellyTrack.Plugin/main/manifest.json`
-4. Enregistrer → Ouvrir le Catalogue → Rechercher **JellyTrack** → Installer
-5. Redémarrer Jellyfin
 
-Pourquoi ? Le dépôt permet d'installer et mettre à jour le plugin directement depuis l'interface Jellyfin sans copier manuellement de DLL.
+### 2. Installation
+1. Allez dans l'onglet **Catalogue**.
+2. Recherchez **JellyTrack** et installez-le.
+3. **Redémarrez Jellyfin** pour activer le plugin.
 
-Cette méthode est la méthode principale supportée pour la production.
+---
 
-## Installation manuelle (optionnelle)
+## ⚙️ Configuration
 
-1. Télécharger `JellyTrack.Plugin.dll` depuis les Releases
-2. Créer le dossier `JellyTrack` dans le répertoire plugins de Jellyfin :
-   - Linux : `/var/lib/jellyfin/plugins/JellyTrack/`
-   - Windows : `C:\ProgramData\Jellyfin\Server\plugins\JellyTrack\`
-   - Docker : `/config/plugins/JellyTrack/`
-3. Copier `JellyTrack.Plugin.dll` dans ce dossier
-4. Redémarrer Jellyfin
+Une fois installé, rendez-vous dans **Tableau de bord** > **Plugins** > **JellyTrack** pour configurer la connexion :
 
-Utilisez cette méthode uniquement pour le debug local ou en environnement isolé.
+- **URL JellyTrack** : L'adresse de votre serveur (ex: `http://192.168.1.100:3000`).
+- **Clé API** : La clé générée dans l'interface de JellyTrack (format `jt_xxxxxxxxxxxx`).
+- **Intervalle Heartbeat** : Fréquence de vérification de santé (défaut: 600s).
 
-## Configuration
+> [!TIP]
+> Utilisez le bouton **Tester la connexion** pour vérifier que le plugin communique correctement avec votre serveur avant d'enregistrer.
 
-Dans Jellyfin → Tableau de bord → Plugins → JellyTrack :
+---
 
-- **URL JellyTrack** : ex. `http://192.168.1.100:3000` (si vous entrez uniquement l'hôte, le plugin poste sur `/api/plugin/events`)
-- **Clé API** : `jt_xxxxxxxxxxxx` (depuis JellyTrack)
-- **Intervalle Heartbeat (s)** : 600 (par défaut, minimum 300)
-- **Intervalle Progress (s)** : 15 (par défaut)
-- **Activer / Désactiver** : bascule globale
+## 🛠️ Installation Manuelle (Optionnelle)
 
-Cliquer sur **Tester la connexion**, puis **Enregistrer**.
+Si vous ne pouvez pas utiliser le dépôt :
+1. Téléchargez le fichier `JellyTrack.Plugin.dll` depuis les [Releases](https://github.com/maelmoreau21/JellyTrack.Plugin/releases).
+2. Créez un dossier `JellyTrack` dans votre répertoire `plugins` Jellyfin.
+3. Copiez le fichier `.dll` dedans et redémarrez Jellyfin.
 
-## Vérifications rapides
+---
 
-- Démarrer une lecture → vérifier la réception de `PlaybackStart` sur JellyTrack
-- Pendant la lecture → vérifier `PlaybackProgress` (toutes les 15s par défaut)
-- Arrêter la lecture → vérifier `PlaybackStop`
-- Attendre le heartbeat → vérifier envoi périodique
+## 📄 Licence
 
-## Compilation (développeurs)
-
-```bash
-git clone https://github.com/maelmoreau21/JellyTrack.Plugin.git
-cd JellyTrack.Plugin/JellyTrack.Plugin
-dotnet build -c Release
-# Le binaire sera dans bin/Release/net9.0/JellyTrack.Plugin.dll
-```
-
-## Dépannage
-
-- Plugin absent dans le catalogue → vérifier l'URL du manifeste et la connectivité réseau depuis le serveur Jellyfin
-- Aucun événement reçu → vérifier la configuration (URL, clé), les logs Jellyfin et JellyTrack
-- Message `Unauthorized` juste après installation → ce n'est pas un échec d'installation du dépôt. Cela signifie que le plugin essaie d'envoyer un heartbeat avec une clé API invalide/ancienne. Ouvrir la configuration du plugin, corriger URL + clé API, ou désactiver le plugin tant que JellyTrack n'est pas prêt.
-- Si vous utilisez une URL contenant un chemin personnalisé, assurez-vous que l'endpoint côté JellyTrack accepte `/api/plugin/events` ou `/api/webhook/jellyfin` selon votre configuration
-
-## Licence
-
-MIT
-
-## Internationalisation / Langues
-
-- Le plugin détecte par défaut la langue d'interface du serveur Jellyfin et l'envoie dans le `Heartbeat` vers JellyTrack. Cela permet à JellyTrack d'utiliser par défaut la même langue que votre serveur Jellyfin.
-- Vous pouvez surcharger ce comportement dans la configuration du plugin (option **Langue préférée**) : laissez vide pour utiliser la langue de Jellyfin, ou renseignez un code de langue ISO (ex: `en`, `fr`, `pt-BR`).
-
-## Dépôts liés
-
-- Application JellyTrack : https://github.com/maelmoreau21/JellyTrack
-- Plugin JellyTrack pour Jellyfin : https://github.com/maelmoreau21/JellyTrack.Plugin
+Distribué sous licence **MIT**.
