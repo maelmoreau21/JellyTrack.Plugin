@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/maelmoreau21/JellyTrack/main/public/logo.svg" width="128" height="128" alt="JellyTrack Logo">
+  <img src="assets/banner.png" alt="JellyTrack Plugin Banner">
+</p>
+
+<p align="center">
+  <img src="logo.svg" width="64" height="64" alt="JellyTrack Logo">
 </p>
 
 <h1 align="center">JellyTrack Plugin</h1>
