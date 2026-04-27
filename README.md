@@ -1,4 +1,6 @@
 
+![JellyTrack Plugin Banner](assets/banner.png)
+
 # JellyTrack Plugin pour Jellyfin
 
 Plugin pour Jellyfin qui envoie les événements de lecture et les métadonnées vers **JellyTrack** pour l'analyse et les statistiques.

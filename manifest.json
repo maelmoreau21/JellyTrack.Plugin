@@ -6,7 +6,7 @@
         "overview": "Plugin Jellyfin pour pousser les événements de lecture vers JellyTrack",
         "owner": "JellyTrack",
         "category": "General",
-        "imageUrl": "",
+        "imageUrl": "https://raw.githubusercontent.com/maelmoreau21/JellyTrack.Plugin/main/assets/banner.png",
         "versions": [
             {
                 "version": "1.1.0.0",

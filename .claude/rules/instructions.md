@@ -1,5 +1,7 @@
 #+ NOTE: Fichier de reference unique pour les agents IA travaillant sur le plugin.
 
+![JellyTrack Plugin Logo](../../assets/banner.png)
+
 # JellyTrack Plugin - Instructions pour agents IA (v1.4.0)
 
 IMPORTANT (pour agents IA) - lire entierement ce document avant de proposer des modifications.
